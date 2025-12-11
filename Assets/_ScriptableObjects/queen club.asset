@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 816aa8abcc0507342bd6fb1e301ff4ac, type: 3}
+  m_Name: queen club
+  m_EditorClassIdentifier: 
+  cardName: 
+  value: 10
+  cardImage: {fileID: 5843203172339085442, guid: 08adbecb1ef2db241990c98565037061, type: 3}
