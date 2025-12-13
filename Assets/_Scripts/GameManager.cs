@@ -15,14 +15,23 @@ public class GameManager : MonoBehaviour
     public GameObject cardPrefab;
     public Sprite cardBackSprite;
 
+    [Header("Cấu hình Buff & Level")]
+    public List<BuffData> allBuffsLibrary;
+    public GameObject buffCardPrefab;
+    public GameObject buffSelectionPanel;
+    public Transform buffContainer;
+    public int levelsPerBuff = 1;
+
     [Header("UI Bàn Chơi")]
     public Transform playerHandArea;
     public Transform dealerHandArea;
 
-    [Header("UI Thông Báo & Cược")]
-    public TextMeshProUGUI scoreText;
+    [Header("UI Thông Báo")]
+    public TextMeshProUGUI scoreText;      // Điểm người chơi
+    public TextMeshProUGUI enemyScoreText; // MỚI: Điểm kẻ địch
     public TextMeshProUGUI resultText;
     public TextMeshProUGUI betAmountText;
+    public TextMeshProUGUI levelText;
 
     [Header("UI Nút Bấm & Panel")]
     public GameObject bettingPanel;
@@ -32,26 +41,33 @@ public class GameManager : MonoBehaviour
     public Button standButton;
     public Button doubleButton;
 
-    // MỚI: List chứa các nút cược để tắt bật
-    [Header("Danh sách nút cược (Kéo vào đây)")]
-    public Button[] betButtons; // Kéo 5 nút cược (10, 25, 50...) vào đây theo thứ tự
-    public int[] betValues;     // Điền giá trị tương ứng (10, 25, 50...) vào đây
+    [Header("Nút chức năng Cược")]
+    public Button dealButton;
+    public Button clearButton;
+
+    [Header("Danh sách nút Phỉnh")]
+    public Button[] betButtons;
+    public int[] betValues;
 
     // Các biến cục bộ
     private List<CardData> playerHand = new List<CardData>();
     private List<CardData> dealerHand = new List<CardData>();
     private GameObject hiddenCardObject;
+
     private int currentBet = 0;
+    private int currentLevel = 1;
+    private bool isDoubleActive = false;
 
     void Start()
     {
         if (player) player.Initialize();
         if (enemy) enemy.Initialize();
+        if (buffSelectionPanel) buffSelectionPanel.SetActive(false);
 
         ShowBettingPhase();
     }
 
-    // --- PHA 1: ĐẶT CƯỢC (ĐÃ CẬP NHẬT) ---
+    // --- PHA 1: ĐẶT CƯỢC ---
     void ShowBettingPhase()
     {
         foreach (Transform child in playerHandArea) Destroy(child.gameObject);
@@ -59,53 +75,58 @@ public class GameManager : MonoBehaviour
         playerHand.Clear();
         dealerHand.Clear();
 
-        if (resultText) resultText.text = "CHỌN MỨC CƯỢC";
+        if (resultText) resultText.text = "";
+        if (levelText) levelText.text = "LEVEL " + currentLevel;
         if (scoreText) scoreText.text = "";
-        if (betAmountText) betAmountText.text = "DMG: 0";
+        if (enemyScoreText) enemyScoreText.text = ""; // Reset điểm địch
+
+        currentBet = 0;
+        UpdateBetUI();
 
         if (bettingPanel) bettingPanel.SetActive(true);
         if (gameplayPanel) gameplayPanel.SetActive(false);
 
-        // MỚI: Kiểm tra từng nút cược, nếu không đủ máu thì khóa lại
-        CheckBetButtons();
+        isDoubleActive = false;
+        dealButton.interactable = false;
+        clearButton.interactable = true;
+        CheckChipButtons();
     }
 
-    // Hàm kiểm tra và khóa nút cược
-    void CheckBetButtons()
+    void CheckChipButtons()
     {
         if (betButtons == null || betValues == null) return;
-
-        int playerCurrentHP = player.CurrentHP;
-
+        int playerHP = player.CurrentHP;
         for (int i = 0; i < betButtons.Length; i++)
         {
             if (i < betValues.Length)
             {
-                int cost = betValues[i];
-                // Nếu máu hiện tại < giá cược -> Khóa nút (Interactable = false)
-                if (playerCurrentHP < cost)
-                {
-                    betButtons[i].interactable = false;
-                }
-                else
-                {
-                    betButtons[i].interactable = true;
-                }
+                int potentialBet = currentBet + betValues[i];
+                betButtons[i].interactable = (potentialBet <= playerHP);
             }
         }
     }
 
-    public void OnBetSelected(int amount)
+    public void OnChipSelected(int amount)
     {
-        // Kiểm tra lại lần nữa cho chắc (chống hack/lag)
-        if (player.CurrentHP < amount)
-        {
-            Debug.Log("Không đủ máu để cược mức này!");
-            return;
-        }
-
-        currentBet = amount;
+        if (player.CurrentHP < currentBet + amount) return;
+        currentBet += amount;
+        betAmountText.transform.DOPunchScale(Vector3.one * 0.2f, 0.1f);
         UpdateBetUI();
+        CheckChipButtons();
+        if (currentBet > 0) dealButton.interactable = true;
+    }
+
+    public void OnClearBetPressed()
+    {
+        currentBet = 0;
+        UpdateBetUI();
+        CheckChipButtons();
+        dealButton.interactable = false;
+    }
+
+    public void OnDealPressed()
+    {
+        if (currentBet <= 0) return;
         StartRound();
     }
 
@@ -119,17 +140,7 @@ public class GameManager : MonoBehaviour
 
         hitButton.interactable = true;
         standButton.interactable = true;
-
-        // MỚI: Chỉ cho Double nếu đủ máu trả cược gấp đôi (Tổng cược x2 <= HP hiện tại)
-        // Ví dụ: Đang cược 50, muốn Double lên 100 thì phải có >= 100 máu
-        if (player.CurrentHP >= currentBet * 2)
-        {
-            doubleButton.interactable = true;
-        }
-        else
-        {
-            doubleButton.interactable = false; // Máu yếu không cho Double
-        }
+        doubleButton.interactable = (player.CurrentHP >= currentBet * 2);
 
         if (resultText) resultText.text = "VS";
 
@@ -139,14 +150,24 @@ public class GameManager : MonoBehaviour
         SpawnHiddenCard();
 
         UpdateScoreUI();
+        UpdateDealerScoreUI(false); // Chưa lật bài -> false
 
+        // Check Blackjack
         if (CalculateScore(playerHand) == 21)
         {
-            ResolveCombat(false);
+            int dealerScore = CalculateScore(dealerHand);
+            if (dealerScore == 21)
+            {
+                RevealHoleCard();
+                ResolveCombat(false);
+            }
+            else
+            {
+                RevealHoleCard();
+                ResolveCombat(false);
+            }
         }
     }
-
-    // --- CÁC HÀM XỬ LÝ NÚT BẤM ---
 
     public void OnHitPressed()
     {
@@ -158,29 +179,17 @@ public class GameManager : MonoBehaviour
 
     public void OnDoublePressed()
     {
-        // Kiểm tra lại lần cuối xem đủ máu không
         if (player.CurrentHP < currentBet * 2) return;
-
-        currentBet *= 2;
-        UpdateBetUI();
-
-        SpawnCard(playerHand, playerHandArea);
-        UpdateScoreUI();
-
-        hitButton.interactable = false;
-        standButton.interactable = false;
-        doubleButton.interactable = false;
-
-        if (CalculateScore(playerHand) > 21) ResolveCombat(true);
-        else OnStandPressed();
+        currentBet *= 2; isDoubleActive = true; UpdateBetUI();
+        hitButton.interactable = false; standButton.interactable = false; doubleButton.interactable = false;
+        SpawnCard(playerHand, playerHandArea); UpdateScoreUI();
+        if (CalculateScore(playerHand) > 21) Invoke("DoDoubleBust", 0.5f); else Invoke("OnStandPressed", 1f);
     }
+    void DoDoubleBust() { ResolveCombat(true); }
 
     public void OnStandPressed()
     {
-        hitButton.interactable = false;
-        standButton.interactable = false;
-        doubleButton.interactable = false;
-
+        hitButton.interactable = false; standButton.interactable = false; doubleButton.interactable = false;
         RevealHoleCard();
         Invoke("DealerTurnLogic", 0.5f);
     }
@@ -190,6 +199,7 @@ public class GameManager : MonoBehaviour
         while (CalculateScore(dealerHand) < 17)
         {
             SpawnCard(dealerHand, dealerHandArea);
+            UpdateDealerScoreUI(true); // Đã lật bài -> true, cập nhật liên tục khi rút
         }
         ResolveCombat(false);
     }
@@ -197,65 +207,145 @@ public class GameManager : MonoBehaviour
     // --- PHA 3: TÍNH DAMAGE ---
     void ResolveCombat(bool playerBusted)
     {
-        hitButton.interactable = false;
-        standButton.interactable = false;
-        doubleButton.interactable = false;
-
         int pScore = CalculateScore(playerHand);
         int dScore = CalculateScore(dealerHand);
-        int finalDamage = currentBet;
+        int baseDamage = currentBet;
+        int finalDamage = 0;
 
-        bool isBlackjack = (pScore == 21 && playerHand.Count == 2);
-        if (isBlackjack) finalDamage = Mathf.RoundToInt(currentBet * 1.5f);
+        bool playerWin = false;
+        bool enemyWin = false;
 
-        if (playerBusted)
+        bool playerBlackjack = (pScore == 21 && playerHand.Count == 2);
+        bool dealerBlackjack = (dScore == 21 && dealerHand.Count == 2);
+
+        if (playerBlackjack && dealerBlackjack) { /* Hòa */ }
+        else if (playerBlackjack) { playerWin = true; baseDamage = Mathf.RoundToInt(baseDamage * 1.5f); }
+        else if (playerBusted) enemyWin = true;
+        else if (dScore > 21) playerWin = true;
+        else if (pScore > dScore) playerWin = true;
+        else if (dScore > pScore) enemyWin = true;
+
+        if (playerWin)
         {
-            player.TakeDamage(currentBet);
-            resultText.text = $"QUẮC! NHẬN {currentBet} ST";
-        }
-        else if (dScore > 21)
-        {
+            finalDamage = player.CalculateFinalOutgoingDamage(baseDamage, pScore, isDoubleActive);
             enemy.TakeDamage(finalDamage);
-            resultText.text = $"ĐỊCH QUẮC! GÂY {finalDamage} ST";
+            string winMsg = playerBlackjack ? "<color=yellow>BLACKJACK!</color> " : "THẮNG! ";
+            resultText.text = $"{winMsg}SÁT THƯƠNG {finalDamage}";
+            player.AddGold(10);
         }
-        else if (pScore > dScore)
+        else if (enemyWin)
         {
-            enemy.TakeDamage(finalDamage);
-            string msg = isBlackjack ? "BLACKJACK! " : "THẮNG! ";
-            resultText.text = $"{msg}GÂY {finalDamage} ST";
-        }
-        else if (dScore > pScore)
-        {
-            player.TakeDamage(currentBet);
-            resultText.text = $"THUA! NHẬN {currentBet} ST";
+            finalDamage = player.CalculateFinalIncomingDamage(currentBet, dScore);
+            player.TakeDamage(finalDamage);
+            resultText.text = $"THUA! NHẬN {finalDamage} ST";
         }
         else
         {
-            resultText.text = "HÒA! THU HỒI CƯỢC";
+            string tieMsg = (playerBlackjack && dealerBlackjack) ? "HÒA (CÙNG BLACKJACK)!" : "HÒA!";
+            resultText.text = $"{tieMsg} THU HỒI CƯỢC";
         }
 
         CheckWinCondition();
     }
 
+    // ... (Giữ nguyên CheckWinCondition, HandleLevelComplete, Buff System...) ...
     void CheckWinCondition()
     {
-        if (player.CurrentHP <= 0)
+        if (player.CurrentHP <= 0) resultText.text = "GAME OVER";
+        else if (enemy.CurrentHP <= 0) HandleLevelComplete();
+        else Invoke("ShowBettingPhase", 2f);
+    }
+    void HandleLevelComplete()
+    {
+        enemy.Initialize();
+        if (currentLevel % levelsPerBuff == 0) Invoke("ShowBuffSelection", 1f);
+        else { currentLevel++; Invoke("ShowBettingPhase", 2f); }
+    }
+    void ShowBuffSelection()
+    {
+        if (buffSelectionPanel) buffSelectionPanel.SetActive(true);
+        if (gameplayPanel) gameplayPanel.SetActive(false);
+        foreach (Transform child in buffContainer) Destroy(child.gameObject);
+        List<BuffData> validBuffs = new List<BuffData>();
+        foreach (var buff in allBuffsLibrary) { if (player.GetBuffLevel(buff) < 3) validBuffs.Add(buff); }
+        int cardsToSpawn = Mathf.Min(3, validBuffs.Count);
+        for (int i = 0; i < cardsToSpawn; i++)
         {
-            resultText.text = "GAME OVER";
+            int randomIndex = Random.Range(0, validBuffs.Count);
+            BuffData selectedBuff = validBuffs[randomIndex];
+            validBuffs.RemoveAt(randomIndex);
+            CreateBuffCardUI(selectedBuff);
         }
-        else if (enemy.CurrentHP <= 0)
+        if (cardsToSpawn == 0) OnBuffSelected(null);
+    }
+    void CreateBuffCardUI(BuffData buff)
+    {
+        GameObject cardObj = Instantiate(buffCardPrefab, buffContainer);
+        int nextLvl = player.GetBuffLevel(buff) + 1;
+        TextMeshProUGUI[] texts = cardObj.GetComponentsInChildren<TextMeshProUGUI>();
+        if (texts.Length >= 1)
         {
-            resultText.text = "VICTORY";
+            string title = buff.buffName;
+            if (nextLvl > 1) title += " " + nextLvl;
+            texts[0].text = title;
+        }
+        if (texts.Length >= 2) texts[1].text = buff.GetDescription(nextLvl);
+        Image[] images = cardObj.GetComponentsInChildren<Image>();
+        if (images.Length >= 2) images[1].sprite = buff.icon;
+        Button btn = cardObj.GetComponentInChildren<Button>();
+        if (btn) btn.onClick.AddListener(() => OnBuffSelected(buff));
+    }
+    void OnBuffSelected(BuffData buff)
+    {
+        if (buff != null) player.AddOrUpgradeBuff(buff);
+        buffSelectionPanel.SetActive(false);
+        currentLevel++;
+        ShowBettingPhase();
+    }
+
+    // --- HÀM TÍNH ĐIỂM & SPAWN BÀI ---
+
+    int CalculateScore(List<CardData> hand)
+    {
+        int score = 0; int aceCount = 0;
+        foreach (var card in hand)
+        {
+            score += card.value;
+            if (card.cardName.Contains("Ace") || card.value == 11) aceCount++;
+        }
+        while (score > 21 && aceCount > 0) { score -= 10; aceCount--; }
+        return score;
+    }
+
+    void UpdateScoreUI() { if (scoreText) scoreText.text = "Bạn: " + CalculateScore(playerHand); }
+    void UpdateBetUI() { if (betAmountText) betAmountText.text = "DMG: " + currentBet; }
+
+    // MỚI: Hàm cập nhật điểm Địch
+    void UpdateDealerScoreUI(bool isRevealed)
+    {
+        if (enemyScoreText == null) return;
+
+        if (isRevealed)
+        {
+            // Nếu đã lật: Hiện tổng điểm
+            enemyScoreText.text = "Địch: " + CalculateScore(dealerHand);
         }
         else
         {
-            Invoke("ShowBettingPhase", 2f);
+            // Nếu chưa lật: Chỉ hiện điểm lá đầu tiên (nếu có)
+            if (dealerHand.Count > 0)
+            {
+                int visibleScore = dealerHand[0].value;
+                // Xử lý riêng: Nếu lá ngửa là Ace (11) thì hiển thị là 11
+                enemyScoreText.text = "Địch: " + visibleScore + " + ?";
+            }
+            else
+            {
+                enemyScoreText.text = "";
+            }
         }
     }
 
-    // ... (Giữ nguyên các hàm SpawnCard, SpawnHiddenCard, RevealHoleCard, CalculateScore, UpdateScoreUI, UpdateBetUI cũ) ...
-
-    // ----------- BỔ SUNG CÁC HÀM CŨ ĐỂ CODE CHẠY ĐƯỢC (COPY LẠI TỪ BÀI TRƯỚC) ------------
     void SpawnCard(List<CardData> handData, Transform handArea)
     {
         if (deckManager == null) return;
@@ -291,20 +381,10 @@ public class GameManager : MonoBehaviour
                 hiddenCardObject.GetComponent<Image>().sprite = hiddenData.cardImage;
                 hiddenCardObject.GetComponentInChildren<TextMeshProUGUI>().text = hiddenData.value.ToString();
                 hiddenCardObject.transform.DOScale(Vector3.one, 0.2f);
+
+                // MỚI: Lật xong thì cập nhật lại điểm full
+                UpdateDealerScoreUI(true);
             });
         }
     }
-    int CalculateScore(List<CardData> hand)
-    {
-        int score = 0; int aceCount = 0;
-        foreach (var card in hand)
-        {
-            score += card.value;
-            if (card.cardName.Contains("Ace") || card.value == 11) aceCount++;
-        }
-        while (score > 21 && aceCount > 0) { score -= 10; aceCount--; }
-        return score;
-    }
-    void UpdateScoreUI() { if (scoreText) scoreText.text = "Score: " + CalculateScore(playerHand); }
-    void UpdateBetUI() { if (betAmountText) betAmountText.text = "DMG: " + currentBet; }
 }

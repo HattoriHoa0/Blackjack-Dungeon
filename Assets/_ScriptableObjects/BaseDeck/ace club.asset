@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: ace club
   m_EditorClassIdentifier: 
   cardName: 
-  value: 1
+  value: 11
   cardImage: {fileID: -4748679620050162069, guid: 6e701586dbb41d440adab39943ab8556, type: 3}
