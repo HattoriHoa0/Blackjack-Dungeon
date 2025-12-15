@@ -37,4 +37,8 @@ public class DeckManager : MonoBehaviour
         drawPile.RemoveAt(0);
         return card;
     }
+    public int GetCardsRemaining()
+    {
+        return drawPile.Count;
+    }
 }

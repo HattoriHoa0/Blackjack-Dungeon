@@ -127,4 +127,13 @@ public class CharacterBase : MonoBehaviour
     {
         if (goldText) goldText.text = $"Gold: {currentGold}";
     }
+
+    public void Heal(int amount)
+    {
+        currentHP += amount;
+        if (currentHP > maxHP) currentHP = maxHP;
+        UpdateUI();
+        if (hpText) hpText.transform.DOPunchScale(Vector3.one * 0.2f, 0.2f);
+        if (hpText) hpText.color = Color.green; // Hiệu ứng nháy xanh khi hồi máu
+    }
 }

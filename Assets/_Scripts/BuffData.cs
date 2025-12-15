@@ -32,4 +32,10 @@ public abstract class BuffData : ScriptableObject
     {
         // Mặc định không làm gì cả (để các buff khác không bị lỗi)
     }
+
+    // Cần truyền GameManager vào để buff có thể gọi hiển thị thông báo (UpdateResultText)
+    public virtual int ModifyPlayerDamage(int finalDamage, GameManager gm, int level)
+    {
+        return finalDamage; // Mặc định trả về damage gốc, không đổi
+    }
 }

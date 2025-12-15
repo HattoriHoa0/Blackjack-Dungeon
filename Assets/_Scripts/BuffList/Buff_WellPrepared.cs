@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Buff_WellPrepared", menuName = "Blackjack/Buff/WellPrepared")]
+[CreateAssetMenu(fileName = "New Buff_WellPrepared", menuName = "Blackjack/Buffs/WellPrepared")]
 public class Buff_WellPrepared : BuffData
 {
     public float[] healPercentages = { 0.1f, 0.2f, 0.4f };
@@ -26,8 +26,10 @@ public class Buff_WellPrepared : BuffData
             // Sửa 'gm.playerStats' thành 'gm.player' (Theo code GameManager của bạn)
             // Giả sử CharacterBase có biến MaxHP và hàm Heal
             // Nếu CharacterBase của bạn dùng tên biến khác (VD: maxHealth), hãy sửa lại dòng dưới
-            int healAmount = Mathf.RoundToInt(gm.player.MaxHP * percent);
+            // Sửa MaxHP thành maxHP (theo file CharacterBase.cs của bạn)
+            int healAmount = Mathf.RoundToInt(gm.player.maxHP * percent);
 
+            // Gọi hàm Heal vừa tạo ở bước 2
             gm.player.Heal(healAmount);
 
             Debug.Log($"<color=green>Buff Chuẩn Bị: Hồi {healAmount} HP!</color>");

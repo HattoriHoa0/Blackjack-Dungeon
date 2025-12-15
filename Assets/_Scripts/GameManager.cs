@@ -110,13 +110,10 @@ public class GameManager : MonoBehaviour
         // Lưu ý: Cần đảm bảo CharacterBase có biến public activeBuffs
         if (player.activeBuffs != null)
         {
-            foreach (var buff in player.activeBuffs)
+            foreach (var runtimeBuff in player.activeBuffs)
             {
-                // Lấy level hiện tại của buff đó trên người chơi
-                int buffLvl = player.GetBuffLevel(buff);
-
-                // Truyền cả GameManager và Level vào
-                buff.OnLevelStart(this, buffLvl);
+                // PHẢI GỌI QUA .data VÌ activeBuffs LÀ LIST<RuntimeBuff>
+                runtimeBuff.data.OnLevelStart(this, runtimeBuff.level);
             }
         }
         // ------------------------------------------------------------------------
@@ -322,10 +319,10 @@ public class GameManager : MonoBehaviour
             // --- [MỚI] HOOK BUFF: TÍNH LẠI DAMAGE (Cho Buff "Trúng hay hụt") ---
             if (player.activeBuffs != null)
             {
-                foreach (var buff in player.activeBuffs)
+                foreach (var runtimeBuff in player.activeBuffs)
                 {
-                    // Buff sẽ tự quyết định có sửa damage hay không
-                    finalDamage = buff.ModifyPlayerDamage(finalDamage, this);
+                    // PHẢI GỌI QUA .data
+                    finalDamage = runtimeBuff.data.ModifyPlayerDamage(finalDamage, this, runtimeBuff.level);
                 }
             }
             // ------------------------------------------------------------------

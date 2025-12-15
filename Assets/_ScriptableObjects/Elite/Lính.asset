@@ -14,6 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyName: "L\xEDnh"
   portrait: {fileID: 6414383859997594047, guid: ea7e6a60a203ee04686f26d043caacb6, type: 3}
-  baseHP: 100
-  ability: 0
-  abilityDescription: 
+  baseHP: 50
+  abilityLogic: {fileID: 0}

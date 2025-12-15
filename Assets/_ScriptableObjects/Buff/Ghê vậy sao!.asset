@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "Gh\xEA v\u1EADy sao!"
   m_EditorClassIdentifier: 
   id: defense
-  buffName: "Gh\xEA v\u1EADy sao!"
+  buffName: "Gh\xEA V\u1EADy Sao!"
   icon: {fileID: 6757169722430770843, guid: 180dc29715d9a8d43973bae2b18498e2, type: 3}
   threshold: 20
   receiveMultipliers:

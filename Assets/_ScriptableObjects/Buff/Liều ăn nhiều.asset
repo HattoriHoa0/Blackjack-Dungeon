@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: "Li\u1EC1u \u0103n nhi\u1EC1u"
   m_EditorClassIdentifier: 
   id: double_dare
-  buffName: "Li\u1EC1u \u0103n nhi\u1EC1u"
+  buffName: "Li\u1EC1u \u0102n Nhi\u1EC1u H\u01A1n"
   icon: {fileID: 43226203873635761, guid: 2c4867de72260d24583bc48797128c0d, type: 3}
   bonusMultipliers:
   - 1
-  - 1.3
-  - 1.8
+  - 1.5
+  - 2

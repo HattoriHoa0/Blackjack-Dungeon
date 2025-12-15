@@ -1044,7 +1044,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -1, y: -0.0010375977}
+  m_AnchoredPosition: {x: -1, y: -0.0009765625}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &217424797
@@ -1392,7 +1392,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 13.987915, y: -264}
+  m_AnchoredPosition: {x: 13.987793, y: -264}
   m_SizeDelta: {x: 255.3022, y: -458}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &424795791
@@ -4733,6 +4733,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 48b0a2f49a702d4459e9eb59c23089a1, type: 2}
   - {fileID: 11400000, guid: d2e069ba3a9777c48ba97c32a5a8b7ee, type: 2}
   - {fileID: 11400000, guid: a19c6e5c0186e5d49af7e2dbbceb7ac9, type: 2}
+  - {fileID: 11400000, guid: e3b13776fc98ddb4c8464aaa74dccae4, type: 2}
+  - {fileID: 11400000, guid: a7b43c87e486b344b92125fcd351df17, type: 2}
   buffCardPrefab: {fileID: 258607003408299970, guid: c13435f660680f94786c6e94b87daa4f, type: 3}
   buffSelectionPanel: {fileID: 1863149536}
   buffContainer: {fileID: 1961669347}
@@ -4754,6 +4756,7 @@ MonoBehaviour:
   betButtons: []
   betValues: 
   enemyTooltipTrigger: {fileID: 1871625964}
+  currentLevel: 1
 --- !u!4 &1805961621
 Transform:
   m_ObjectHideFlags: 0
