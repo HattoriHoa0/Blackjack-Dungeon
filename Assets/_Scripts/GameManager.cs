@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +11,9 @@ public class GameManager : MonoBehaviour
     public DeckManager deckManager;
     public CharacterBase player;
     public CharacterBase enemy;
+    [Header("UI Game Over")]
+    public GameObject gameOverPanel;
+    public TextMeshProUGUI endTitleText;
 
     [Header("Cấu hình Bài")]
     public GameObject cardPrefab;
@@ -342,7 +346,7 @@ public class GameManager : MonoBehaviour
             else
             {
                 string winMsg = playerBlackjack ? "<color=yellow>BLACKJACK!</color> " : "THẮNG! ";
-                resultText.text = $"{winMsg}GÂY {finalDamage} ST";
+                resultText.text = $"{winMsg}GÂY {finalDamage} SÁT THƯƠNG";
             }
 
             enemy.TakeDamage(finalDamage);
@@ -352,7 +356,7 @@ public class GameManager : MonoBehaviour
         {
             finalDamage = player.CalculateFinalIncomingDamage(currentBet, dScore);
             player.TakeDamage(finalDamage);
-            resultText.text = $"THUA! NHẬN {finalDamage} ST";
+            resultText.text = $"THUA! NHẬN {finalDamage} SÁT THƯƠNG";
         }
         else
         {
@@ -364,9 +368,20 @@ public class GameManager : MonoBehaviour
 
     void CheckWinCondition()
     {
-        if (player.CurrentHP <= 0) resultText.text = "GAME OVER";
-        else if (enemy.CurrentHP <= 0) HandleLevelComplete();
-        else Invoke("ShowBettingPhase", 2f);
+        if (player.CurrentHP <= 0)
+        {
+            // Thua -> Hiện bảng Game Over
+            GameOver("BẠN THUA RỒI!");
+        }
+        else if (enemy.CurrentHP <= 0)
+        {
+            HandleLevelComplete();
+        }
+        else
+        {
+            // Chưa ai chết -> Tiếp tục chơi
+            Invoke("ShowBettingPhase", 2f);
+        }
     }
 
     void HandleLevelComplete()
@@ -488,5 +503,31 @@ public class GameManager : MonoBehaviour
         if (isRevealed) enemyScoreText.text = "Địch: " + CalculateScore(dealerHand);
         else if (dealerHand.Count > 0) enemyScoreText.text = "Địch: " + dealerHand[0].value + " + ?";
         else enemyScoreText.text = "";
+    }
+
+    void GameOver(string title)
+    {
+        if (gameOverPanel)
+        {
+            gameOverPanel.SetActive(true); // Bật bảng lên
+            if (endTitleText) endTitleText.text = title;
+        }
+
+        // Tắt các panel khác để đỡ rối
+        if (gameplayPanel) gameplayPanel.SetActive(false);
+        if (bettingPanel) bettingPanel.SetActive(false);
+    }
+
+    // Gắn vào nút "CHƠI LẠI"
+    public void OnRetryPressed()
+    {
+        // Load lại màn chơi hiện tại
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    // Gắn vào nút "VỀ MENU"
+    public void OnMenuPressed()
+    {
+        SceneManager.LoadScene("MainMenu");
     }
 }

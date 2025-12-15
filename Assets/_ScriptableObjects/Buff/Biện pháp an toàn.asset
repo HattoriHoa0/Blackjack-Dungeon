@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "Bi\u1EC7n ph\xE1p an to\xE0n"
   m_EditorClassIdentifier: 
   id: low_roll
-  buffName: "Bi\u1EC7n Ph\xE1p An To\xE0n"
+  buffName: "V\xF5 S\u0129 H\u1EA1ng Nh\u1EB9"
   icon: {fileID: 9075206069774866868, guid: 331cc2a2a85815547a2c02d2114d1799, type: 3}
   condition: 0
   threshold: 18

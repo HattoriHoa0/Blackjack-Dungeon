@@ -22,7 +22,7 @@ public class Buff_HitOrMiss : BuffData
 
         // Format string: P0 = phần trăm không số lẻ (50%), P1 = 1 số lẻ (50.5%)
         return $"<color=green>{successRates[i] * 100}%</color> tỉ lệ tăng <color=green>{dmgBonus[i] * 100}%</color> dmg.\n" +
-               $"Nếu trượt, <color=red>{failRates[i] * 100}%</color> tỉ lệ giảm <color=red>{dmgPenalty[i] * 100}%</color> dmg.";
+               $"Nếu không, <color=red>{failRates[i] * 100}%</color> tỉ lệ giảm <color=red>{dmgPenalty[i] * 100}%</color> dmg.";
     }
 
     // 2. Logic xử lý Damage
