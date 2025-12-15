@@ -15,6 +15,11 @@ public class GameManager : MonoBehaviour
     public GameObject cardPrefab;
     public Sprite cardBackSprite;
 
+    [Header("Cấu hình Quái Vật")]
+    public EnemyData normalEnemyData;
+    public List<EnemyData> eliteEnemiesList;
+    public TextMeshProUGUI enemyAbilityText;
+
     [Header("Cấu hình Buff & Level")]
     public List<BuffData> allBuffsLibrary;
     public GameObject buffCardPrefab;
@@ -27,8 +32,8 @@ public class GameManager : MonoBehaviour
     public Transform dealerHandArea;
 
     [Header("UI Thông Báo")]
-    public TextMeshProUGUI scoreText;      // Điểm người chơi
-    public TextMeshProUGUI enemyScoreText; // MỚI: Điểm kẻ địch
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI enemyScoreText;
     public TextMeshProUGUI resultText;
     public TextMeshProUGUI betAmountText;
     public TextMeshProUGUI levelText;
@@ -37,6 +42,7 @@ public class GameManager : MonoBehaviour
     public GameObject bettingPanel;
     public GameObject gameplayPanel;
 
+    // Để public để các Ability Script có thể can thiệp
     public Button hitButton;
     public Button standButton;
     public Button doubleButton;
@@ -49,22 +55,93 @@ public class GameManager : MonoBehaviour
     public Button[] betButtons;
     public int[] betValues;
 
+    [Header("UI Tooltip")]
+    public TooltipTrigger enemyTooltipTrigger;
+
     // Các biến cục bộ
     private List<CardData> playerHand = new List<CardData>();
     private List<CardData> dealerHand = new List<CardData>();
     private GameObject hiddenCardObject;
 
     private int currentBet = 0;
-    private int currentLevel = 1;
+    public int currentLevel = 1; // Đổi thành public để Buff truy cập được Level
     private bool isDoubleActive = false;
+
+    private EnemyData currentEnemyData;
+
+    // --- CÁC HÀM PUBLIC HELPER (Cho Ability Script gọi) ---
+    public int GetCurrentBet() { return currentBet; }
+    public void UpdateResultText(string msg) { if (resultText) resultText.text = msg; }
+
+    public void SpawnExtraCardForPlayer()
+    {
+        SpawnCard(playerHand, playerHandArea);
+        if (resultText) resultText.text = "TRƯỢT TAY RÚT THÊM!";
+        UpdateScoreUI();
+        if (CalculateScore(playerHand) > 21) ResolveCombat(true);
+    }
+    // -----------------------------------------------------
 
     void Start()
     {
         if (player) player.Initialize();
-        if (enemy) enemy.Initialize();
+        SetupEnemyForLevel();
         if (buffSelectionPanel) buffSelectionPanel.SetActive(false);
-
         ShowBettingPhase();
+    }
+
+    void SetupEnemyForLevel()
+    {
+        // 1. Chọn Quái
+        if (currentLevel % 3 == 0)
+            currentEnemyData = eliteEnemiesList[Random.Range(0, eliteEnemiesList.Count)];
+        else
+            currentEnemyData = normalEnemyData;
+
+        // 2. Tính Máu
+        float hpMultiplier = Mathf.Pow(1.1f, currentLevel - 1);
+        int scaledHP = Mathf.RoundToInt(currentEnemyData.baseHP * hpMultiplier);
+
+        // 3. Setup Visuals
+        enemy.Initialize(scaledHP);
+        enemy.SetupVisuals(currentEnemyData.enemyName, currentEnemyData.portrait);
+
+        // --- [MỚI] HOOK BUFF: KHI BẮT ĐẦU LEVEL (Cho Buff "Chuẩn bị kĩ lưỡng") ---
+        // Lưu ý: Cần đảm bảo CharacterBase có biến public activeBuffs
+        if (player.activeBuffs != null)
+        {
+            foreach (var buff in player.activeBuffs)
+            {
+                // Lấy level hiện tại của buff đó trên người chơi
+                int buffLvl = player.GetBuffLevel(buff);
+
+                // Truyền cả GameManager và Level vào
+                buff.OnLevelStart(this, buffLvl);
+            }
+        }
+        // ------------------------------------------------------------------------
+
+        // 4. Setup Tooltip & Text
+        string abilityDesc = "";
+
+        if (currentEnemyData.abilityLogic != null)
+        {
+            abilityDesc = currentEnemyData.abilityLogic.description;
+        }
+        else
+        {
+            abilityDesc = "Quái vật thông thường.\nTăng máu theo cấp độ.";
+        }
+
+        if (enemyTooltipTrigger != null)
+        {
+            enemyTooltipTrigger.header = ""; // Ẩn tên quái đi cho đỡ lặp
+            enemyTooltipTrigger.content = abilityDesc;
+        }
+
+        if (enemyAbilityText)
+            enemyAbilityText.text = (currentEnemyData.abilityLogic != null) ?
+                $"<color=red>⚠️ {abilityDesc}</color>" : "";
     }
 
     // --- PHA 1: ĐẶT CƯỢC ---
@@ -78,7 +155,7 @@ public class GameManager : MonoBehaviour
         if (resultText) resultText.text = "";
         if (levelText) levelText.text = "LEVEL " + currentLevel;
         if (scoreText) scoreText.text = "";
-        if (enemyScoreText) enemyScoreText.text = ""; // Reset điểm địch
+        if (enemyScoreText) enemyScoreText.text = "";
 
         currentBet = 0;
         UpdateBetUI();
@@ -118,17 +195,10 @@ public class GameManager : MonoBehaviour
 
     public void OnClearBetPressed()
     {
-        currentBet = 0;
-        UpdateBetUI();
-        CheckChipButtons();
-        dealButton.interactable = false;
+        currentBet = 0; UpdateBetUI(); CheckChipButtons(); dealButton.interactable = false;
     }
 
-    public void OnDealPressed()
-    {
-        if (currentBet <= 0) return;
-        StartRound();
-    }
+    public void OnDealPressed() { if (currentBet > 0) StartRound(); }
 
     // --- PHA 2: CHIA BÀI & CHƠI ---
     public void StartRound()
@@ -144,28 +214,25 @@ public class GameManager : MonoBehaviour
 
         if (resultText) resultText.text = "VS";
 
+        // --- HOOK ENEMY: ROUND START ---
+        if (currentEnemyData.abilityLogic != null)
+        {
+            currentEnemyData.abilityLogic.OnRoundStart(this);
+        }
+        // -------------------------------
+
         SpawnCard(playerHand, playerHandArea);
         SpawnCard(dealerHand, dealerHandArea);
         SpawnCard(playerHand, playerHandArea);
         SpawnHiddenCard();
 
         UpdateScoreUI();
-        UpdateDealerScoreUI(false); // Chưa lật bài -> false
+        UpdateDealerScoreUI(false);
 
-        // Check Blackjack
         if (CalculateScore(playerHand) == 21)
         {
-            int dealerScore = CalculateScore(dealerHand);
-            if (dealerScore == 21)
-            {
-                RevealHoleCard();
-                ResolveCombat(false);
-            }
-            else
-            {
-                RevealHoleCard();
-                ResolveCombat(false);
-            }
+            RevealHoleCard();
+            ResolveCombat(false);
         }
     }
 
@@ -173,6 +240,14 @@ public class GameManager : MonoBehaviour
     {
         doubleButton.interactable = false;
         SpawnCard(playerHand, playerHandArea);
+
+        // --- HOOK ENEMY: PLAYER HIT ---
+        if (currentEnemyData.abilityLogic != null)
+        {
+            currentEnemyData.abilityLogic.OnPlayerHit(this);
+        }
+        // -----------------------------
+
         UpdateScoreUI();
         if (CalculateScore(playerHand) > 21) ResolveCombat(true);
     }
@@ -196,11 +271,28 @@ public class GameManager : MonoBehaviour
 
     void DealerTurnLogic()
     {
-        while (CalculateScore(dealerHand) < 17)
+        // --- HOOK ENEMY: DEALER STOP ---
+        if (currentEnemyData.abilityLogic != null)
         {
-            SpawnCard(dealerHand, dealerHandArea);
-            UpdateDealerScoreUI(true); // Đã lật bài -> true, cập nhật liên tục khi rút
+            if (currentEnemyData.abilityLogic.OnDealerTurnStop(this))
+            {
+                ResolveCombat(false);
+                return;
+            }
         }
+        // -----------------------------
+
+        // --- [MỚI] SỬA LẠI VÒNG LẶP AN TOÀN TRÁNH CRASH ---
+        int safety = 0;
+        while (CalculateScore(dealerHand) < 17 && safety < 20)
+        {
+            if (deckManager.GetCardsRemaining() <= 0) break; // Check hết bài
+            SpawnCard(dealerHand, dealerHandArea);
+            UpdateDealerScoreUI(true);
+            safety++;
+        }
+        // --------------------------------------------------
+
         ResolveCombat(false);
     }
 
@@ -214,23 +306,49 @@ public class GameManager : MonoBehaviour
 
         bool playerWin = false;
         bool enemyWin = false;
-
         bool playerBlackjack = (pScore == 21 && playerHand.Count == 2);
-        bool dealerBlackjack = (dScore == 21 && dealerHand.Count == 2);
 
-        if (playerBlackjack && dealerBlackjack) { /* Hòa */ }
-        else if (playerBlackjack) { playerWin = true; baseDamage = Mathf.RoundToInt(baseDamage * 1.5f); }
-        else if (playerBusted) enemyWin = true;
+        if (playerBusted) enemyWin = true;
         else if (dScore > 21) playerWin = true;
         else if (pScore > dScore) playerWin = true;
         else if (dScore > pScore) enemyWin = true;
 
+        if (playerBlackjack && playerWin) baseDamage = Mathf.RoundToInt(baseDamage * 1.5f);
+
         if (playerWin)
         {
             finalDamage = player.CalculateFinalOutgoingDamage(baseDamage, pScore, isDoubleActive);
+
+            // --- [MỚI] HOOK BUFF: TÍNH LẠI DAMAGE (Cho Buff "Trúng hay hụt") ---
+            if (player.activeBuffs != null)
+            {
+                foreach (var buff in player.activeBuffs)
+                {
+                    // Buff sẽ tự quyết định có sửa damage hay không
+                    finalDamage = buff.ModifyPlayerDamage(finalDamage, this);
+                }
+            }
+            // ------------------------------------------------------------------
+
+            // --- HOOK ENEMY: GIẢM DAMAGE (Iron Defense) ---
+            if (currentEnemyData.abilityLogic != null)
+            {
+                finalDamage = currentEnemyData.abilityLogic.OnCalculateDamage(finalDamage, pScore);
+            }
+            // ---------------------------------------------
+
+            if (enemyScoreText && currentEnemyData.abilityLogic != null && pScore <= 16 && currentEnemyData.abilityLogic.name.Contains("Iron"))
+            {
+                // Đoạn này check tên logic hơi hardcode, có thể cải thiện sau
+                resultText.text = $"QUÁI ĐỠ ĐÒN! CHỈ GÂY {finalDamage} ST";
+            }
+            else
+            {
+                string winMsg = playerBlackjack ? "<color=yellow>BLACKJACK!</color> " : "THẮNG! ";
+                resultText.text = $"{winMsg}GÂY {finalDamage} ST";
+            }
+
             enemy.TakeDamage(finalDamage);
-            string winMsg = playerBlackjack ? "<color=yellow>BLACKJACK!</color> " : "THẮNG! ";
-            resultText.text = $"{winMsg}SÁT THƯƠNG {finalDamage}";
             player.AddGold(10);
         }
         else if (enemyWin)
@@ -241,26 +359,30 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            string tieMsg = (playerBlackjack && dealerBlackjack) ? "HÒA (CÙNG BLACKJACK)!" : "HÒA!";
-            resultText.text = $"{tieMsg} THU HỒI CƯỢC";
+            resultText.text = "HÒA! THU HỒI CƯỢC";
         }
 
         CheckWinCondition();
     }
 
-    // ... (Giữ nguyên CheckWinCondition, HandleLevelComplete, Buff System...) ...
     void CheckWinCondition()
     {
         if (player.CurrentHP <= 0) resultText.text = "GAME OVER";
         else if (enemy.CurrentHP <= 0) HandleLevelComplete();
         else Invoke("ShowBettingPhase", 2f);
     }
+
     void HandleLevelComplete()
     {
-        enemy.Initialize();
         if (currentLevel % levelsPerBuff == 0) Invoke("ShowBuffSelection", 1f);
-        else { currentLevel++; Invoke("ShowBettingPhase", 2f); }
+        else
+        {
+            currentLevel++;
+            SetupEnemyForLevel();
+            Invoke("ShowBettingPhase", 2f);
+        }
     }
+
     void ShowBuffSelection()
     {
         if (buffSelectionPanel) buffSelectionPanel.SetActive(true);
@@ -278,6 +400,17 @@ public class GameManager : MonoBehaviour
         }
         if (cardsToSpawn == 0) OnBuffSelected(null);
     }
+
+    void OnBuffSelected(BuffData buff)
+    {
+        if (buff != null) player.AddOrUpgradeBuff(buff);
+        buffSelectionPanel.SetActive(false);
+        currentLevel++;
+        SetupEnemyForLevel();
+        ShowBettingPhase();
+    }
+
+    // --- CÁC HÀM CƠ BẢN (SPAWN, TÍNH ĐIỂM) ---
     void CreateBuffCardUI(BuffData buff)
     {
         GameObject cardObj = Instantiate(buffCardPrefab, buffContainer);
@@ -295,15 +428,48 @@ public class GameManager : MonoBehaviour
         Button btn = cardObj.GetComponentInChildren<Button>();
         if (btn) btn.onClick.AddListener(() => OnBuffSelected(buff));
     }
-    void OnBuffSelected(BuffData buff)
+
+    void SpawnCard(List<CardData> handData, Transform handArea)
     {
-        if (buff != null) player.AddOrUpgradeBuff(buff);
-        buffSelectionPanel.SetActive(false);
-        currentLevel++;
-        ShowBettingPhase();
+        if (deckManager == null) return;
+        CardData card = deckManager.GetNextCard();
+        if (card == null) return;
+        handData.Add(card);
+        GameObject newCard = Instantiate(cardPrefab, handArea);
+        newCard.GetComponent<Image>().sprite = card.cardImage;
+        newCard.GetComponentInChildren<TextMeshProUGUI>().text = card.value.ToString();
+        newCard.transform.localScale = Vector3.zero;
+        newCard.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
     }
 
-    // --- HÀM TÍNH ĐIỂM & SPAWN BÀI ---
+    void SpawnHiddenCard()
+    {
+        if (deckManager == null) return;
+        CardData card = deckManager.GetNextCard();
+        if (card == null) return;
+        dealerHand.Add(card);
+        GameObject newCard = Instantiate(cardPrefab, dealerHandArea);
+        hiddenCardObject = newCard;
+        newCard.GetComponent<Image>().sprite = cardBackSprite;
+        newCard.GetComponentInChildren<TextMeshProUGUI>().text = "";
+        newCard.transform.localScale = Vector3.zero;
+        newCard.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
+    }
+
+    void RevealHoleCard()
+    {
+        if (hiddenCardObject != null && dealerHand.Count >= 2)
+        {
+            CardData hiddenData = dealerHand[1];
+            hiddenCardObject.transform.DOScale(new Vector3(0, 1, 1), 0.2f).OnComplete(() =>
+            {
+                hiddenCardObject.GetComponent<Image>().sprite = hiddenData.cardImage;
+                hiddenCardObject.GetComponentInChildren<TextMeshProUGUI>().text = hiddenData.value.ToString();
+                hiddenCardObject.transform.DOScale(Vector3.one, 0.2f);
+                UpdateDealerScoreUI(true);
+            });
+        }
+    }
 
     int CalculateScore(List<CardData> hand)
     {
@@ -319,72 +485,11 @@ public class GameManager : MonoBehaviour
 
     void UpdateScoreUI() { if (scoreText) scoreText.text = "Bạn: " + CalculateScore(playerHand); }
     void UpdateBetUI() { if (betAmountText) betAmountText.text = "DMG: " + currentBet; }
-
-    // MỚI: Hàm cập nhật điểm Địch
     void UpdateDealerScoreUI(bool isRevealed)
     {
         if (enemyScoreText == null) return;
-
-        if (isRevealed)
-        {
-            // Nếu đã lật: Hiện tổng điểm
-            enemyScoreText.text = "Địch: " + CalculateScore(dealerHand);
-        }
-        else
-        {
-            // Nếu chưa lật: Chỉ hiện điểm lá đầu tiên (nếu có)
-            if (dealerHand.Count > 0)
-            {
-                int visibleScore = dealerHand[0].value;
-                // Xử lý riêng: Nếu lá ngửa là Ace (11) thì hiển thị là 11
-                enemyScoreText.text = "Địch: " + visibleScore + " + ?";
-            }
-            else
-            {
-                enemyScoreText.text = "";
-            }
-        }
-    }
-
-    void SpawnCard(List<CardData> handData, Transform handArea)
-    {
-        if (deckManager == null) return;
-        CardData card = deckManager.GetNextCard();
-        if (card == null) return;
-        handData.Add(card);
-        GameObject newCard = Instantiate(cardPrefab, handArea);
-        newCard.GetComponent<Image>().sprite = card.cardImage;
-        newCard.GetComponentInChildren<TextMeshProUGUI>().text = card.value.ToString();
-        newCard.transform.localScale = Vector3.zero;
-        newCard.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
-    }
-    void SpawnHiddenCard()
-    {
-        if (deckManager == null) return;
-        CardData card = deckManager.GetNextCard();
-        if (card == null) return;
-        dealerHand.Add(card);
-        GameObject newCard = Instantiate(cardPrefab, dealerHandArea);
-        hiddenCardObject = newCard;
-        newCard.GetComponent<Image>().sprite = cardBackSprite;
-        newCard.GetComponentInChildren<TextMeshProUGUI>().text = "";
-        newCard.transform.localScale = Vector3.zero;
-        newCard.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
-    }
-    void RevealHoleCard()
-    {
-        if (hiddenCardObject != null && dealerHand.Count >= 2)
-        {
-            CardData hiddenData = dealerHand[1];
-            hiddenCardObject.transform.DOScale(new Vector3(0, 1, 1), 0.2f).OnComplete(() =>
-            {
-                hiddenCardObject.GetComponent<Image>().sprite = hiddenData.cardImage;
-                hiddenCardObject.GetComponentInChildren<TextMeshProUGUI>().text = hiddenData.value.ToString();
-                hiddenCardObject.transform.DOScale(Vector3.one, 0.2f);
-
-                // MỚI: Lật xong thì cập nhật lại điểm full
-                UpdateDealerScoreUI(true);
-            });
-        }
+        if (isRevealed) enemyScoreText.text = "Địch: " + CalculateScore(dealerHand);
+        else if (dealerHand.Count > 0) enemyScoreText.text = "Địch: " + dealerHand[0].value + " + ?";
+        else enemyScoreText.text = "";
     }
 }
