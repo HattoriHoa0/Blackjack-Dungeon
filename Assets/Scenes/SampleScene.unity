@@ -5188,7 +5188,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bd4d23c03d79a946ab873395a7d4d39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  deckManager: {fileID: 1805961622}
+  playerDeck: {fileID: 1805961622}
+  enemyDeck: {fileID: 1805961622}
   player: {fileID: 2064919275}
   enemy: {fileID: 1234395054}
   gameOverPanel: {fileID: 1400607389}
@@ -5281,6 +5282,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1374bda63dedf86439adaf4392266dcf, type: 2}
   - {fileID: 11400000, guid: 4e2f4b07715235d47aebaea069621f86, type: 2}
   - {fileID: 11400000, guid: b1ab28e52f5682c45aade067acf11ed5, type: 2}
+  drawPile:
+  - {fileID: 0}
+  discardPile: []
 --- !u!1 &1863149536
 GameObject:
   m_ObjectHideFlags: 0
