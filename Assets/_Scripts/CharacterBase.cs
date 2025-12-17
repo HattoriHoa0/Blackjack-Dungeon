@@ -28,8 +28,11 @@ public class CharacterBase : MonoBehaviour
     public TextMeshProUGUI hpText;
     public TextMeshProUGUI goldText;
 
-    private int currentHP;
-    private int currentGold = 0;
+    [Header("Inventory")]
+    public List<ItemData> inventory = new List<ItemData>(); // Túi đồ
+    public int maxInventorySlots = 6; // Giới hạn 6 ô
+    public int currentHP;
+    public int currentGold = 0;
 
     public List<RuntimeBuff> activeBuffs = new List<RuntimeBuff>();
 
@@ -135,5 +138,29 @@ public class CharacterBase : MonoBehaviour
         UpdateUI();
         if (hpText) hpText.transform.DOPunchScale(Vector3.one * 0.2f, 0.2f);
         if (hpText) hpText.color = Color.green; // Hiệu ứng nháy xanh khi hồi máu
+    }
+    // Hàm kiểm tra túi đầy chưa
+    public bool IsInventoryFull()
+    {
+        return inventory.Count >= maxInventorySlots;
+    }
+
+    // Hàm thêm đồ vào túi
+    public void AddItem(ItemData item)
+    {
+        if (!IsInventoryFull())
+        {
+            inventory.Add(item);
+            Debug.Log($"Đã nhận: {item.itemName}");
+        }
+    }
+
+    // Hàm xóa đồ khỏi túi (khi dùng)
+    public void RemoveItem(ItemData item)
+    {
+        if (inventory.Contains(item))
+        {
+            inventory.Remove(item);
+        }
     }
 }

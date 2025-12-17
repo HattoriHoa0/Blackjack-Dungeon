@@ -11,7 +11,7 @@ public class Buff_Defense : BuffData
     {
         int index = Mathf.Clamp(level - 1, 0, receiveMultipliers.Length - 1);
         float percent = receiveMultipliers[index] * 100;
-        return $"Khi địch thắng với điểm >= {threshold}, bạn chỉ nhận <color=green>{percent}%</color> sát thương.";
+        return $"Khi địch thắng với điểm từ {threshold} trở lên, bạn chỉ nhận <color=green>{percent}%</color> sát thương.";
     }
 
     public override int OnCalculateIncomingDamage(int incomingDamage, int enemyScore, int level)

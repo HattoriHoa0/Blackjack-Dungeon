@@ -21,8 +21,8 @@ public class Buff_HitOrMiss : BuffData
         int i = Mathf.Clamp(level - 1, 0, successRates.Length - 1);
 
         // Format string: P0 = phần trăm không số lẻ (50%), P1 = 1 số lẻ (50.5%)
-        return $"<color=green>{successRates[i] * 100}%</color> tỉ lệ tăng <color=green>{dmgBonus[i] * 100}%</color> dmg.\n" +
-               $"Nếu không, <color=red>{failRates[i] * 100}%</color> tỉ lệ giảm <color=red>{dmgPenalty[i] * 100}%</color> dmg.";
+        return $"Có <color=red>{successRates[i] * 100}%</color> tỉ lệ tăng <color=red>{dmgBonus[i] * 100}%</color> dmg khi thắng.\n" +
+               $"Nếu không, <color=grey>{failRates[i] * 100}%</color> tỉ lệ giảm <color=grey>{dmgPenalty[i] * 100}%</color> dmg.";
     }
 
     // 2. Logic xử lý Damage
