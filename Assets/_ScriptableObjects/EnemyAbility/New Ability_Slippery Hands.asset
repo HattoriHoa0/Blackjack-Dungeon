@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 222520ddc38951e43a26805a660765fe, type: 3}
   m_Name: New Ability_Slippery Hands
   m_EditorClassIdentifier: 
-  description: "Khi b\u1EA1n HIT, c\xF3 24% t\u1EF1 \u0111\u1ED9ng r\xFAt th\xEAm
+  description: "Khi b\u1EA1n HIT, c\xF3 36% t\u1EF1 \u0111\u1ED9ng r\xFAt th\xEAm
     1 l\xE1"

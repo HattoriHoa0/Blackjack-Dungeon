@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92f601ba101c4284792c9f9c45d44196, type: 3}
+  m_Name: Pain
+  m_EditorClassIdentifier: 
+  heroID: pain
+  heroName: Pain
+  description: "Tr\xF9m Soi L\xE9n: Gi\xE1 c\u1EE7a item Glass gi\u1EA3m \u0111i
+    10 gold. Nh\u1EADn Buff kh\u1EDDi \u0111\u1EA7u Li\u1EC1u \u0102n Nhi\u1EC1u
+    H\u01A1n"
+  portrait: {fileID: -7663176772277722578, guid: d780fa55a18e5714b8c0657d0a2bf2d1, type: 3}
+  baseHP: 1000
+  passiveType: 3
+  startingBuff: {fileID: 11400000, guid: d2e069ba3a9777c48ba97c32a5a8b7ee, type: 2}

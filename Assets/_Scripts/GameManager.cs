@@ -13,6 +13,9 @@ public class GameManager : MonoBehaviour
     public CharacterBase player;
     public CharacterBase enemy;
 
+    [Header("Hero System")]
+    private HeroData currentHero; // Biến private để lưu hero hiện tại
+
     // [MỚI] Tham chiếu đến ShopManager
     [Header("Shop System")]
     public ShopManager shopManager;
@@ -49,11 +52,11 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI betAmountText;
     public TextMeshProUGUI levelText;
     public TextMeshProUGUI notificationText;
+    public Image heroPortraitUI;
 
     [Header("UI Nút Bấm & Panel")]
     public GameObject bettingPanel;
     public GameObject gameplayPanel;
-
     public Button hitButton;
     public Button standButton;
     public Button doubleButton;
@@ -93,7 +96,7 @@ public class GameManager : MonoBehaviour
     public void SpawnExtraCardForPlayer()
     {
         SpawnCard(playerHand, playerHandArea, playerDeck);
-        if (resultText) resultText.text = "TRƯỢT TAY RÚT THÊM!";
+        if (resultText) ShowNotification("RÚT DÍNH BÀI");
         UpdateScoreUI();
         if (CalculateScore(playerHand) > 21) ResolveCombat(true);
     }
@@ -101,6 +104,39 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // 1. LẤY HERO TỪ DATA HOLDER
+        if (GameDataHolder.Instance != null && GameDataHolder.Instance.selectedHero != null)
+        {
+            currentHero = GameDataHolder.Instance.selectedHero;
+            Debug.Log($"Đang chơi Hero: {currentHero.heroName}");
+        }
+        else
+        {
+            Debug.LogWarning("Chưa chọn Hero! Load Hero mặc định để test.");
+            // Bạn có thể gán tạm một HeroData mặc định ở đây nếu test thẳng trong Scene Game
+        }
+
+        // 2. SETUP PLAYER DỰA TRÊN HERO
+        if (currentHero != null)
+        {
+            // Set Máu
+            player.maxHP = currentHero.baseHP;
+            player.currentHP = currentHero.baseHP; // Reset máu về đầy
+
+            // Set Buff Khởi đầu
+            if (currentHero.startingBuff != null)
+            {
+                // Giả sử bạn đã có hàm AddBuff trong Player hoặc CharacterBase
+                // Nếu chưa, hãy dùng: player.AddBuff(currentHero.startingBuff);
+                player.AddOrUpgradeBuff(currentHero.startingBuff);
+            }
+            if (heroPortraitUI != null)
+            {
+                heroPortraitUI.sprite = currentHero.portrait;
+                heroPortraitUI.preserveAspect = true; // Giữ tỷ lệ ảnh cho đẹp
+            }
+        }
+
         if (player) player.Initialize();
         SetupEnemyForLevel();
         if (buffSelectionPanel) buffSelectionPanel.SetActive(false);
@@ -133,7 +169,7 @@ public class GameManager : MonoBehaviour
         }
 
         string abilityDesc = (currentEnemyData.abilityLogic != null) ?
-            currentEnemyData.abilityLogic.description : "Quái vật thông thường.\nTăng máu theo cấp độ.";
+            currentEnemyData.abilityLogic.description : "Quái thường.";
 
         if (enemyTooltipTrigger != null)
         {
@@ -347,13 +383,13 @@ public class GameManager : MonoBehaviour
 
             if (enemyScoreText && currentEnemyData.abilityLogic != null && pScore <= 16 && currentEnemyData.abilityLogic.name.Contains("Iron"))
             {
-                resultText.text = $"QUÁI ĐỠ ĐÒN! CHỈ GÂY {finalDamage} ST";
+                ShowNotification($"QUÁI ĐỠ ĐÒN! CHỈ GÂY {finalDamage} ST");
             }
             else
             {
                 string winMsg = playerBlackjack ? "<color=yellow>BLACKJACK!</color> " : "THẮNG! ";
                 string rageMsg = (tempDamageMultiplier > 1f) ? $" (x{tempDamageMultiplier}) " : "";
-                resultText.text = $"{winMsg}GÂY {finalDamage}{rageMsg} ST";
+                ShowNotification($"{winMsg}GÂY {finalDamage}{rageMsg} ST");
             }
 
             enemy.TakeDamage(finalDamage);
@@ -374,18 +410,18 @@ public class GameManager : MonoBehaviour
                 int blocked = Mathf.Min(finalDamage, tempBlock);
                 finalDamage -= blocked;
                 if (finalDamage < 0) finalDamage = 0;
-                resultText.text = $"THUA! KHIÊN ĐỠ {blocked}, NHẬN {finalDamage} ST";
+                ShowNotification($"THUA! KHIÊN ĐỠ {blocked}, NHẬN {finalDamage} ST");
             }
             else
             {
-                resultText.text = $"THUA! NHẬN {finalDamage} SÁT THƯƠNG";
+                ShowNotification($"THUA! NHẬN {finalDamage} SÁT THƯƠNG");
             }
 
             player.TakeDamage(finalDamage);
         }
         else
         {
-            resultText.text = "HÒA! THU HỒI CƯỢC";
+            ShowNotification("HÒA! THU HỒI CƯỢC");
         }
 
         if (playerDeck) playerDeck.AddToDiscardPile(playerHand);
@@ -407,7 +443,7 @@ public class GameManager : MonoBehaviour
             player.AddGold(goldReward);
 
             // Cập nhật thông báo cho người chơi sướng
-            UpdateResultText($"ĐỊCH ĐÃ BẠI! (+{goldReward} Vàng)");
+            ShowNotification($"ĐỊCH ĐÃ BẠI! (+{goldReward} Vàng)");
 
             // Gọi hàm chuyển cảnh (có delay 1 giây để người chơi kịp đọc thông báo trên)
             HandleLevelComplete();
@@ -420,7 +456,13 @@ public class GameManager : MonoBehaviour
 
     void HandleLevelComplete()
     {
-        // [MỚI] Logic hiển thị: Win -> (Buff?) -> Shop -> Next Level
+        //HERO PASSIVE: GERNAS (Hồi máu)
+        if (currentHero != null && currentHero.passiveType == HeroPassiveType.HealOnLevel)
+        {
+            int healAmount = 50;
+            player.Heal(healAmount);
+        }
+        //Logic hiển thị: Win -> (Buff?) -> Shop -> Next Level
         if (currentLevel % levelsPerBuff == 0)
         {
             // Nếu có Buff: Chọn buff xong sẽ mở Shop (xem hàm OnBuffSelected)
@@ -544,9 +586,11 @@ public class GameManager : MonoBehaviour
             if (card.cardName.Contains("Ace") || card.value == 11) aceCount++;
         }
 
-        if (hand == playerHand)
+        if (hand == playerHand) { score += tempScoreBonus; }
+
+        if (hand == playerHand && currentHero != null && currentHero.passiveType == HeroPassiveType.ScorePlusOne)
         {
-            score += tempScoreBonus;
+            score += 1;
         }
 
         while (score > 21 && aceCount > 0) { score -= 10; aceCount--; }
@@ -641,7 +685,7 @@ public class GameManager : MonoBehaviour
     {
         tempScoreBonus += amount;
         UpdateScoreUI();
-        string msg = (amount > 0) ? "UỐNG THUỐC TĂNG TRƯỞNG (+3)" : "UỐNG THUỐC LINH HOẠT (-3)";
+        string msg = (amount > 0) ? "UỐNG THUỐC TĂNG TRƯỞNG (+2)" : "UỐNG THUỐC LINH HOẠT (-2)";
         ShowNotification(msg); // [ĐÃ SỬA] Dùng ShowNotification
     }
 
@@ -698,6 +742,11 @@ public class GameManager : MonoBehaviour
 
         // Hiệu ứng: Rung nhẹ 1 cái -> Chờ 1s -> Mờ dần đi
         notificationText.transform.DOPunchScale(Vector3.one * 0.2f, 0.2f);
-        notificationText.DOFade(0f, 1f).SetDelay(1f);
+        notificationText.DOFade(0f, 05f).SetDelay(1f);
+    }
+
+    public HeroData GetCurrentHero()
+    {
+        return currentHero;
     }
 }

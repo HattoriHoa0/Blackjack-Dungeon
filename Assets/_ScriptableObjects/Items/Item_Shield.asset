@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 
   itemName: Shield
-  price: 30
+  price: 25
   icon: {fileID: 6713977245871677331, guid: 13d4631f5be24514091663e197fb45c3, type: 3}
   description: "V\xF2ng n\xE0y nh\u1EADn \xEDt \u0111i 200 s\xE1t th\u01B0\u01A1ng."
   blockAmount: 200

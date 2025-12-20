@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92f601ba101c4284792c9f9c45d44196, type: 3}
+  m_Name: Gernas
+  m_EditorClassIdentifier: 
+  heroID: gernas
+  heroName: Gernas
+  description: "Bi\u1EC7n Ph\xE1p An To\xE0n: H\u1ED3i 50HP sau m\u1ED7i level. Nh\u1EADn
+    Buff kh\u1EDDi \u0111\u1EA7u Gh\xEA V\u1EADy Sao"
+  portrait: {fileID: 5137916104171707190, guid: 9423ade7f22cfd440b47d160a00994c9, type: 3}
+  baseHP: 1000
+  passiveType: 1
+  startingBuff: {fileID: 11400000, guid: a19c6e5c0186e5d49af7e2dbbceb7ac9, type: 2}

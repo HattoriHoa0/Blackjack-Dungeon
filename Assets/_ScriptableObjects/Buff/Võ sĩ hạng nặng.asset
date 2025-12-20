@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: high_roll
   buffName: "V\xF5 S\u0129 H\u1EA1ng N\u1EB7ng"
-  icon: {fileID: -4350432689819796583, guid: 82d84acf4a6675b4da901a5beeb69ccd, type: 3}
+  icon: {fileID: 5948363489793382506, guid: fec624a16486a5b4b8d22f41deb62e54, type: 3}
   condition: 1
   threshold: 19
   damageMultipliers:

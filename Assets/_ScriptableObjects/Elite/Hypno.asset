@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyName: Hypno
   portrait: {fileID: 5259776271160824086, guid: 816280266499793418b84455c115f473, type: 3}
-  baseHP: 100
+  baseHP: 110
   abilityLogic: {fileID: 11400000, guid: 193678a629d130348b025f3a093901fc, type: 2}

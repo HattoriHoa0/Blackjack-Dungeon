@@ -64,6 +64,22 @@ public class ShopManager : MonoBehaviour
 
             // Setup slot ở chế độ Shop (true)
             slotScript.Setup(item, gameManager, true);
+
+            //XỬ LÝ GIÁ TIỀN CHO PAIN
+            ItemData itemDisplay = item; // Biến tạm
+
+            // Kiểm tra logic
+            if (gameManager.GetCurrentHero() != null &&
+                gameManager.GetCurrentHero().passiveType == HeroPassiveType.DiscountSpyglass &&
+                item.id == "spyglass") // Đảm bảo Item Kính soi của bạn có id là "spyglass"
+            {
+                // Clone ra item ảo để hiển thị giá giảm (tránh sửa vào file gốc)
+                itemDisplay = Instantiate(item);
+                itemDisplay.price = Mathf.Max(0, item.price - 10); // Giảm 10 vàng
+            }
+
+            // Setup slot với itemDisplay (giá đã giảm)
+            slotScript.Setup(itemDisplay, gameManager, true);
         }
     }
 

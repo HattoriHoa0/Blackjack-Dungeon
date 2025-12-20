@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Item_Score Modifier
   m_EditorClassIdentifier: 
   id: 
-  itemName: "Thu\u1ED1c t\u0103ng tr\u01B0\u1EDFng"
-  price: 25
-  icon: {fileID: -2063334306816063941, guid: d83150082eedc0d4aba882dc0307fb3a, type: 3}
-  description: "C\u1ED9ng th\xEAm 3 \u0111i\u1EC3m b\xE0i"
-  scoreModifier: 3
+  itemName: Blue Potion
+  price: 30
+  icon: {fileID: -5613586599618513518, guid: 1530e50d2dc65264ea2e0ba7024f9c51, type: 3}
+  description: "C\u1ED9ng th\xEAm 2 \u0111i\u1EC3m b\xE0i l\u01B0\u1EE3t n\xE0y"
+  scoreModifier: 2

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 556a9f9a38c35254895061d8491b02b2, type: 3}
   m_Name: Item_Spyglass
   m_EditorClassIdentifier: 
-  id: 
+  id: spyglass
   itemName: Glass
   price: 30
   icon: {fileID: -7291854505622115026, guid: 26425345551ea104ead0f85c81df40bf, type: 3}
-  description: "Xem l\xE1 ti\u1EBFp theo l\xE0 g\xEC."
+  description: "Xem gi\xE1 tr\u1ECB l\xE1 ti\u1EBFp theo."

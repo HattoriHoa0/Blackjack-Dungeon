@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92f601ba101c4284792c9f9c45d44196, type: 3}
+  m_Name: Kbruh
+  m_EditorClassIdentifier: 
+  heroID: kbruh
+  heroName: Kbruh
+  description: "M\u1EB9 Tao B\xE9o: C\u1ED9ng Th\xEAm 1 \u0111i\u1EC3m b\xE0i m\u1ECDi
+    l\xFAc. Nh\u1EADn Buff kh\u1EDDi \u0111\u1EA7u V\xF5 S\u0129 H\u1EA1ng N\u1EB7ng"
+  portrait: {fileID: -4350432689819796583, guid: 82d84acf4a6675b4da901a5beeb69ccd, type: 3}
+  baseHP: 900
+  passiveType: 2
+  startingBuff: {fileID: 11400000, guid: 48b0a2f49a702d4459e9eb59c23089a1, type: 2}

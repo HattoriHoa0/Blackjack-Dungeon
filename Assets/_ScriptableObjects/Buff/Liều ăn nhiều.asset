@@ -16,6 +16,6 @@ MonoBehaviour:
   buffName: "Li\u1EC1u \u0102n Nhi\u1EC1u H\u01A1n"
   icon: {fileID: 43226203873635761, guid: 2c4867de72260d24583bc48797128c0d, type: 3}
   bonusMultipliers:
-  - 1
   - 1.5
   - 2
+  - 3
