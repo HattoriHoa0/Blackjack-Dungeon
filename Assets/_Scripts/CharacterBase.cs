@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI; // Để dùng Image
+using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -9,6 +9,7 @@ public class RuntimeBuff
 {
     public BuffData data;
     public int level;
+    [HideInInspector] public GameObject iconObj; // [FIX] Thêm biến này để quản lý icon UI
 
     public RuntimeBuff(BuffData d, int l)
     {
@@ -20,17 +21,23 @@ public class RuntimeBuff
 public class CharacterBase : MonoBehaviour
 {
     [Header("Cấu hình")]
-    public int maxHP = 50;
+    public int baseMaxHP = 1000; // [FIX] Thêm biến gốc
+    public int maxHP;            // Biến thực tế (sau khi cộng buff)
 
     [Header("UI Hiển thị")]
     public Image portraitImage;
+    public Image hpBarFill;      // [FIX] Thêm biến thanh máu
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI hpText;
     public TextMeshProUGUI goldText;
 
+    [Header("Buff UI")]
+    public Transform buffContainer;     // [FIX] Nơi chứa icon buff
+    public GameObject buffIconPrefab;   // [FIX] Prefab icon buff
+
     [Header("Inventory")]
-    public List<ItemData> inventory = new List<ItemData>(); // Túi đồ
-    public int maxInventorySlots = 6; // Giới hạn 6 ô
+    public List<ItemData> inventory = new List<ItemData>();
+    public int maxInventorySlots = 6;
     public int currentHP;
     public int currentGold = 0;
 
@@ -40,8 +47,14 @@ public class CharacterBase : MonoBehaviour
 
     public void Initialize(int overrideMaxHP = -1)
     {
-        if (overrideMaxHP > 0) maxHP = overrideMaxHP;
-        currentHP = maxHP;
+        // Ưu tiên: override -> baseMaxHP inspector -> mặc định
+        if (overrideMaxHP > 0) baseMaxHP = overrideMaxHP;
+        else if (baseMaxHP <= 0) baseMaxHP = 1000; // Giá trị fallback
+
+        // Tính toán chỉ số lần đầu
+        RecalculateStats();
+
+        currentHP = maxHP; // Hồi đầy máu lúc đầu
         UpdateUI();
         UpdateGoldUI();
     }
@@ -62,20 +75,43 @@ public class CharacterBase : MonoBehaviour
     // --- LOGIC BUFF ---
     public void AddOrUpgradeBuff(BuffData buffData)
     {
-        foreach (var runtimeBuff in activeBuffs)
+        RuntimeBuff existing = activeBuffs.Find(b => b.data.id == buffData.id);
+
+        if (existing != null)
         {
-            if (runtimeBuff.data.id == buffData.id)
+            if (existing.level < 3)
             {
-                if (runtimeBuff.level < 3)
+                existing.level++;
+                Debug.Log($"Nâng cấp {buffData.buffName} lên cấp {existing.level}");
+
+                // Cập nhật số level trên icon UI (nếu có)
+                if (existing.iconObj)
                 {
-                    runtimeBuff.level++;
-                    Debug.Log($"Nâng cấp {buffData.buffName} lên cấp {runtimeBuff.level}");
+                    var txt = existing.iconObj.GetComponentInChildren<TextMeshProUGUI>();
+                    if (txt) txt.text = existing.level.ToString();
                 }
-                return;
             }
         }
-        activeBuffs.Add(new RuntimeBuff(buffData, 1));
-        Debug.Log($"Nhận mới {buffData.buffName} cấp 1");
+        else
+        {
+            RuntimeBuff newBuff = new RuntimeBuff(buffData, 1);
+
+            // Tạo Icon UI cho buff mới
+            if (buffIconPrefab && buffContainer)
+            {
+                GameObject icon = Instantiate(buffIconPrefab, buffContainer);
+                icon.GetComponent<Image>().sprite = buffData.icon;
+                icon.GetComponentInChildren<TextMeshProUGUI>().text = "1";
+                // Add TooltipTrigger ở đây nếu muốn
+                newBuff.iconObj = icon;
+            }
+
+            activeBuffs.Add(newBuff);
+            Debug.Log($"Nhận mới {buffData.buffName} cấp 1");
+        }
+
+        // [QUAN TRỌNG] Tính lại chỉ số sau khi thay đổi buff
+        RecalculateStats();
     }
 
     public int GetBuffLevel(BuffData buffData)
@@ -85,6 +121,11 @@ public class CharacterBase : MonoBehaviour
             if (b.data.id == buffData.id) return b.level;
         }
         return 0;
+    }
+
+    public bool HasBuff(BuffData buffData) // [THÊM] Hàm tiện ích
+    {
+        return GetBuffLevel(buffData) > 0;
     }
 
     // --- LOGIC TÍNH TOÁN SÁT THƯƠNG ---
@@ -115,6 +156,7 @@ public class CharacterBase : MonoBehaviour
         if (currentHP < 0) currentHP = 0;
         UpdateUI();
         if (hpText) hpText.transform.DOShakePosition(0.5f, 10f);
+        if (hpBarFill) hpBarFill.transform.DOPunchScale(Vector3.one * 0.1f, 0.2f);
     }
 
     void UpdateUI()
@@ -123,6 +165,11 @@ public class CharacterBase : MonoBehaviour
         {
             hpText.text = $"{currentHP}/{maxHP}";
             hpText.color = (currentHP < maxHP * 0.3f) ? Color.red : Color.white;
+        }
+        // [FIX] Cập nhật thanh máu trượt
+        if (hpBarFill != null)
+        {
+            hpBarFill.fillAmount = (float)currentHP / maxHP;
         }
     }
 
@@ -137,15 +184,14 @@ public class CharacterBase : MonoBehaviour
         if (currentHP > maxHP) currentHP = maxHP;
         UpdateUI();
         if (hpText) hpText.transform.DOPunchScale(Vector3.one * 0.2f, 0.2f);
-        if (hpText) hpText.color = Color.green; // Hiệu ứng nháy xanh khi hồi máu
+        if (hpText) hpText.color = Color.green;
     }
-    // Hàm kiểm tra túi đầy chưa
+
     public bool IsInventoryFull()
     {
         return inventory.Count >= maxInventorySlots;
     }
 
-    // Hàm thêm đồ vào túi
     public void AddItem(ItemData item)
     {
         if (!IsInventoryFull())
@@ -155,12 +201,46 @@ public class CharacterBase : MonoBehaviour
         }
     }
 
-    // Hàm xóa đồ khỏi túi (khi dùng)
     public void RemoveItem(ItemData item)
     {
         if (inventory.Contains(item))
         {
             inventory.Remove(item);
         }
+    }
+
+    //HÀM TÍNH LẠI STATS
+    public void RecalculateStats()
+    {
+        // 1. Lưu lại MaxHP cũ trước khi tính toán
+        int oldMaxHP = maxHP;
+
+        // 2. Reset về gốc
+        maxHP = baseMaxHP;
+        maxInventorySlots = 6; // Reset số ô túi mặc định
+
+        // 3. Duyệt qua tất cả buff để cộng chỉ số mới
+        if (activeBuffs != null)
+        {
+            foreach (var buffInfo in activeBuffs)
+            {
+                buffInfo.data.ApplyStatModifiers(this, buffInfo.level);
+            }
+        }
+
+        // 4. Chỉ hồi máu nếu MaxHP thực sự tăng lên
+        int difference = maxHP - oldMaxHP;
+
+        // Nếu có sự chênh lệch dương (VD: từ 1000 lên 1100 -> diff = 100)
+        // Thì cộng thêm 100 vào máu hiện tại
+        if (difference > 0)
+        {
+            currentHP += difference;
+        }
+
+        // 5. Đảm bảo máu không vượt quá giới hạn (đề phòng trường hợp giảm MaxHP)
+        if (currentHP > maxHP) currentHP = maxHP;
+
+        UpdateUI();
     }
 }

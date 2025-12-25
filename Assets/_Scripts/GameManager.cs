@@ -40,6 +40,11 @@ public class GameManager : MonoBehaviour
     public GameObject buffSelectionPanel;
     public Transform buffContainer;
     public int levelsPerBuff = 2;
+    //REROLL CONFIG ---
+    [Space(10)]
+    public Button buffRerollButton; // Kéo nút Reroll vào đây
+    private bool hasRerolled = false; // Biến kiểm tra xem đã reroll chưa
+    private const int REROLL_COST = 5; // Giá cố định 5 Vàng
 
     [Header("UI Bàn Chơi")]
     public Transform playerHandArea;
@@ -79,7 +84,7 @@ public class GameManager : MonoBehaviour
     public bool hasPlayerHit = false;
 
     // Các biến cục bộ
-    private List<CardData> playerHand = new List<CardData>();
+    public List<CardData> playerHand = new List<CardData>();
     private List<CardData> dealerHand = new List<CardData>();
     private GameObject hiddenCardObject;
 
@@ -285,10 +290,27 @@ public class GameManager : MonoBehaviour
         doubleButton.interactable = false;
         SpawnCard(playerHand, playerHandArea, playerDeck);
 
-        if (currentEnemyData.abilityLogic != null)
+        // Vì buff Ngũ Linh có thể kết thúc game ngay lập tức, ta cần check
+        bool gameEndedByBuff = false;
+
+        if (player.activeBuffs != null)
         {
-            currentEnemyData.abilityLogic.OnPlayerHit(this);
+            foreach (var buffInfo in player.activeBuffs)
+            {
+                // Gọi vào hàm mới ta vừa thêm
+                buffInfo.data.OnPostPlayerHit(this, buffInfo.level);
+
+                // Kiểm tra xem game đã kết thúc chưa (nếu buff đã gọi ResolveCombat)
+                // Cách đơn giản nhất là check activeSelf của gameplayPanel hoặc biến flag
+                if (!gameplayPanel.activeSelf)
+                {
+                    gameEndedByBuff = true;
+                    break;
+                }
+            }
         }
+
+        if (gameEndedByBuff) return;
 
         UpdateScoreUI();
         if (CalculateScore(playerHand) > 21) ResolveCombat(true);
@@ -341,7 +363,7 @@ public class GameManager : MonoBehaviour
     }
 
     // --- PHA 3: TÍNH DAMAGE ---
-    void ResolveCombat(bool playerBusted)
+    public void ResolveCombat(bool playerBusted)
     {
         int pScore = CalculateScore(playerHand);
         int dScore = CalculateScore(dealerHand);
@@ -438,14 +460,22 @@ public class GameManager : MonoBehaviour
         }
         else if (enemy.CurrentHP <= 0)
         {
-            // [MỚI] CỘNG TIỀN Ở ĐÂY (Chỉ khi quái chết mới được tiền)
-            int goldReward = (currentLevel % 3 == 0) ? 80 : 50;
+            // 1. Logic thưởng tiền cơ bản (Code cũ giữ nguyên)
+            int goldReward = (currentLevel % 3 == 0) ? 75 : 35; // Ví dụ
             player.AddGold(goldReward);
 
-            // Cập nhật thông báo cho người chơi sướng
-            ShowNotification($"ĐỊCH ĐÃ BẠI! (+{goldReward} Vàng)");
+            // 2. --- [MỚI] GỌI BUFF ON ENEMY KILLED ---
+            if (player.activeBuffs != null)
+            {
+                // Lưu ý: currentEnemyData là biến bạn dùng trong SetupEnemyForLevel
+                foreach (var b in player.activeBuffs)
+                {
+                    b.data.OnEnemyKilled(this, currentEnemyData, b.level);
+                }
+            }
+            // ------------------------------------------
 
-            // Gọi hàm chuyển cảnh (có delay 1 giây để người chơi kịp đọc thông báo trên)
+            ShowNotification($"ĐỊCH ĐÃ BẠI! (+{goldReward} Vàng)");
             HandleLevelComplete();
         }
         else
@@ -475,13 +505,20 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void ShowBuffSelection()
+    // 1. Hàm sinh buff (Tách ra để dùng lại)
+    void GenerateRandomBuffs()
     {
-        if (buffSelectionPanel) buffSelectionPanel.SetActive(true);
-        if (gameplayPanel) gameplayPanel.SetActive(false);
+        // Xóa cũ
         foreach (Transform child in buffContainer) Destroy(child.gameObject);
+
+        // Lọc buff khả dụng
         List<BuffData> validBuffs = new List<BuffData>();
-        foreach (var buff in allBuffsLibrary) { if (player.GetBuffLevel(buff) < 3) validBuffs.Add(buff); }
+        foreach (var buff in allBuffsLibrary)
+        {
+            if (player.GetBuffLevel(buff) < 3) validBuffs.Add(buff);
+        }
+
+        // Random 3 cái
         int cardsToSpawn = Mathf.Min(3, validBuffs.Count);
         for (int i = 0; i < cardsToSpawn; i++)
         {
@@ -490,7 +527,55 @@ public class GameManager : MonoBehaviour
             validBuffs.RemoveAt(randomIndex);
             CreateBuffCardUI(selectedBuff);
         }
+
         if (cardsToSpawn == 0) OnBuffSelected(null);
+    }
+
+    // 2. Hàm xử lý nút Reroll
+    public void OnRerollBuffsPressed()
+    {
+        // Kiểm tra an toàn: Nếu đã reroll rồi thì chặn luôn
+        if (hasRerolled) return;
+
+        if (player.currentGold >= REROLL_COST)
+        {
+            // Trừ tiền
+            player.AddGold(-REROLL_COST);
+
+            // Đánh dấu đã dùng -> Khóa nút ngay lập tức
+            hasRerolled = true;
+            if (buffRerollButton) buffRerollButton.interactable = false;
+
+            // Sinh lại buff mới
+            GenerateRandomBuffs();
+
+            ShowNotification($"ĐÃ ĐỔI LẠI! (-{REROLL_COST}G)");
+        }
+        else
+        {
+            ShowNotification("KHÔNG ĐỦ 5G!");
+            // Rung nút cảnh báo
+            if (buffRerollButton) buffRerollButton.transform.DOPunchPosition(Vector3.right * 10, 0.3f, 10);
+        }
+    }
+
+    void ShowBuffSelection()
+    {
+        if (buffSelectionPanel) buffSelectionPanel.SetActive(true);
+        if (gameplayPanel) gameplayPanel.SetActive(false);
+
+        // [MỚI] Reset quyền Reroll cho lần chọn này
+        hasRerolled = false;
+
+        // Kiểm tra tiền để bật/tắt nút ban đầu
+        if (buffRerollButton)
+        {
+            // Chỉ sáng nút nếu Đủ tiền
+            buffRerollButton.interactable = (player.currentGold >= REROLL_COST);
+        }
+
+        // Gọi hàm sinh buff
+        GenerateRandomBuffs();
     }
 
     void OnBuffSelected(BuffData buff)
@@ -577,7 +662,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    int CalculateScore(List<CardData> hand)
+    public int CalculateScore(List<CardData> hand)
     {
         int score = 0; int aceCount = 0;
         foreach (var card in hand)
@@ -685,7 +770,7 @@ public class GameManager : MonoBehaviour
     {
         tempScoreBonus += amount;
         UpdateScoreUI();
-        string msg = (amount > 0) ? "UỐNG THUỐC TĂNG TRƯỞNG (+2)" : "UỐNG THUỐC LINH HOẠT (-2)";
+        string msg = (amount > 0) ? "UỐNG THUỐC TĂNG TRƯỞNG (+2)" : "UỐNG THUỐC LINH HOẠT (-3)";
         ShowNotification(msg); // [ĐÃ SỬA] Dùng ShowNotification
     }
 

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0a1857d1244a5b48891c71b82e64456, type: 3}
+  m_Name: "Kh\u1ED5ng L\u1ED3 H\xF3a"
+  m_EditorClassIdentifier: 
+  id: hp_boost
+  buffName: "Kh\u1ED5ng L\u1ED3 H\xF3a"
+  icon: {fileID: -580966358124952214, guid: 70b6c34f64770724386c4949c3fc640e, type: 3}
+  statType: 0
+  values:
+  - 0.1
+  - 0.2
+  - 0.4

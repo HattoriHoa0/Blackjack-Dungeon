@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9137cfb1dfef51c4495e5a4fff8f9901, type: 3}
+  m_Name: "L\u1EA5y Ti\u1EC1n \u0110\xE8 Qu\xE1i"
+  m_EditorClassIdentifier: 
+  id: gold_power
+  buffName: "L\u1EA5y Ti\u1EC1n \u0110\xE8 Qu\xE1i"
+  icon: {fileID: -241934003333704416, guid: edd609f988cbb894fa1bca9f0538a8d5, type: 3}
+  percentPerStack:
+  - 0.2
+  - 0.3
+  - 0.45

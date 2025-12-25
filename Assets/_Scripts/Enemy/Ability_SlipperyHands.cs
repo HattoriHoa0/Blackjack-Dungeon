@@ -5,8 +5,8 @@ public class Ability_SlipperyHands : EnemyAbilityData
 {
     public override void OnPlayerHit(GameManager gm)
     {
-        // Tỉ lệ 24% rút thêm bài
-        if (Random.value < 0.24f)
+        // Tỉ lệ 36% rút thêm bài
+        if (Random.value < 0.36f)
         {
             Debug.Log("Trượt tay! Rút thêm bài!");
             // Gọi hàm SpawnCard của GameManager (Cần public hàm này hoặc dùng phương thức khác)

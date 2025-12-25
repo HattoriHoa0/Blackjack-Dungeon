@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 
   itemName: Ragebait
-  price: 25
+  price: 30
   icon: {fileID: 8348218167397291320, guid: fca3a045be9a9b04f9de21fd6fde96a7, type: 3}
   description: "Nh\xE2n \u0111\xF4i s\xE1t th\u01B0\u01A1ng v\xF2ng n\xE0y."
