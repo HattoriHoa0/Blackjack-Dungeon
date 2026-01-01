@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c4ab1fbc16d288942843c3c9a2daba2f, type: 3}
-  m_Name: "Ph\xE1p s\u01B0 t\u0129nh l\u1EB7ng"
+  m_Name: Mortos
   m_EditorClassIdentifier: 
-  enemyName: "Ph\xE1p s\u01B0 t\u0129nh l\u1EB7ng"
-  portrait: {fileID: -6866426400061525702, guid: a8260ab1d536530439d11bb93970a8e4, type: 3}
-  baseHP: 100
-  abilityLogic: {fileID: 11400000, guid: 893d33180e262b248913c542a4ecdeb6, type: 2}
+  enemyName: 
+  portrait: {fileID: -1986124201240668190, guid: 91e53653e7ee95b4f8257301e940a381, type: 3}
+  baseHP: 110
+  abilityLogic: {fileID: 11400000, guid: cb13d5922ba9b6b46a89e041d54e5d9a, type: 2}

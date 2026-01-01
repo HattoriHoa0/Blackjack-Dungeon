@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c4ab1fbc16d288942843c3c9a2daba2f, type: 3}
-  m_Name: "Ph\xE1p s\u01B0 t\u0129nh l\u1EB7ng"
+  m_Name: Slime
   m_EditorClassIdentifier: 
-  enemyName: "Ph\xE1p s\u01B0 t\u0129nh l\u1EB7ng"
-  portrait: {fileID: -6866426400061525702, guid: a8260ab1d536530439d11bb93970a8e4, type: 3}
-  baseHP: 100
-  abilityLogic: {fileID: 11400000, guid: 893d33180e262b248913c542a4ecdeb6, type: 2}
+  enemyName: Slime
+  portrait: {fileID: 368543389579951487, guid: d0350eede58e17441b35d6a02dcb9452, type: 3}
+  baseHP: 60
+  abilityLogic: {fileID: 11400000, guid: 4953157bce34c774387c9624f0071003, type: 2}

@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c4ab1fbc16d288942843c3c9a2daba2f, type: 3}
-  m_Name: "Ph\xE1p s\u01B0 t\u0129nh l\u1EB7ng"
+  m_Name: Vampire
   m_EditorClassIdentifier: 
-  enemyName: "Ph\xE1p s\u01B0 t\u0129nh l\u1EB7ng"
-  portrait: {fileID: -6866426400061525702, guid: a8260ab1d536530439d11bb93970a8e4, type: 3}
-  baseHP: 100
-  abilityLogic: {fileID: 11400000, guid: 893d33180e262b248913c542a4ecdeb6, type: 2}
+  enemyName: 
+  portrait: {fileID: -5687666349546342197, guid: f338a2374b4c9604e9c3c3c20c54f1a9, type: 3}
+  baseHP: 150
+  abilityLogic: {fileID: 11400000, guid: 781c8cd95f44f3542bc75b4ee9d5b81e, type: 2}

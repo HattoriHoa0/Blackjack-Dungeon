@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de1829c5613881c46bd91bb0d62b4f19, type: 3}
+  m_Name: New Ability_Skeleton
+  m_EditorClassIdentifier: 
+  description: "Khi Mortos v\u1EDBi \u0111i\u1EC3m b\xE0i t\u1EEB 17 tr\u1EDF l\xEAn,
+    g\xE2y th\xEAm 50% dmg, Mortos \u0111\u01B0\u1EE3c c\u1ED9ng th\xEAm 1 \u0111i\u1EC3m
+    b\xE0i."

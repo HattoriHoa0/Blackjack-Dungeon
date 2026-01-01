@@ -10,7 +10,7 @@ public class Buff_WellPrepared : BuffData
     {
         int index = Mathf.Clamp(level - 1, 0, healPercentages.Length - 1);
         int percent = Mathf.RoundToInt(healPercentages[index] * 100);
-        return $"Hồi <color=green>{percent}%</color> máu tối đa khi vào ải Elite (Level chia hết cho 3).";
+        return $"Hồi <color=green>{percent}%</color> máu tối đa khi vào ải Elite.";
     }
 
     // 2. Sửa lại hàm Override cho đúng với BuffData vừa sửa

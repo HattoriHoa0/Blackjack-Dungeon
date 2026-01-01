@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4ab1fbc16d288942843c3c9a2daba2f, type: 3}
   m_Name: "K\u1ECB s\u0129 kh\xF4ng \u0111\u1EA7u"
   m_EditorClassIdentifier: 
-  enemyName: "K\u1ECB s\u0129 kh\xF4ng \u0111\u1EA7u"
+  enemyName: Dullahan
   portrait: {fileID: 4495478712733764576, guid: 1d997abe23bf95a4c92a0c443307b96a, type: 3}
   baseHP: 150
   abilityLogic: {fileID: 11400000, guid: 6534271b793510b4cbaa5ce7c9cb90b9, type: 2}

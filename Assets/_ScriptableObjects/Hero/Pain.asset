@@ -18,6 +18,6 @@ MonoBehaviour:
     10 gold. Nh\u1EADn Buff kh\u1EDDi \u0111\u1EA7u Li\u1EC1u \u0102n Nhi\u1EC1u
     H\u01A1n"
   portrait: {fileID: -7663176772277722578, guid: d780fa55a18e5714b8c0657d0a2bf2d1, type: 3}
-  baseHP: 1000
+  baseHP: 950
   passiveType: 3
   startingBuff: {fileID: 11400000, guid: d2e069ba3a9777c48ba97c32a5a8b7ee, type: 2}

@@ -12,7 +12,7 @@ public class Buff_CardSynergy : BuffData
         int index = Mathf.Clamp(level - 1, 0, damagePercentPerCard.Length - 1);
         int percent = Mathf.RoundToInt(damagePercentPerCard[index] * 100);
 
-        return $"Với mỗi lá bài có cặp/bộ trên tay, tăng <color=red>{percent}%</color> DMG.\n";
+        return $"Với mỗi lá bài có giá trị giống nhau trên tay, tăng <color=red>{percent}%</color> DMG.\n";
     }
 
     // Dùng Hook này vì nó cho phép truy cập GameManager để lấy danh sách bài

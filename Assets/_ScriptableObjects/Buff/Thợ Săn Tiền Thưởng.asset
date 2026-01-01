@@ -15,4 +15,4 @@ MonoBehaviour:
   id: gold_hunter
   buffName: "Th\u1EE3 S\u0103n Ti\u1EC1n Th\u01B0\u1EDFng"
   icon: {fileID: 8479636676305082734, guid: eacb8c92c6f3e0748be1d837272bcf82, type: 3}
-  bonusGold: 0a0000000f00000019000000
+  bonusGold: 0f000000140000001e000000

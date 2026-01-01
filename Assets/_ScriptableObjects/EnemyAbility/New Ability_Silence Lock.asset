@@ -12,4 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff4b8cd6374a9904692669a4b4cbad89, type: 3}
   m_Name: New Ability_Silence Lock
   m_EditorClassIdentifier: 
-  description: "C\u1EA3 2 b\xEAn kh\xF4ng th\u1EC3 HIT!"
+  description: "C\u1EA3 2 b\xEAn kh\xF4ng th\u1EC3 HIT! Ph\xE1p s\u01B0 t\u0129nh
+    l\u1EB7ng \u0111\u01B0\u1EE3c c\u1ED9ng 3 \u0111i\u1EC3m b\xE0i nh\u01B0ng ko
+    c\u1ED9ng l\xEAn qu\xE1 21."

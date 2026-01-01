@@ -20,4 +20,38 @@ public abstract class EnemyAbilityData : ScriptableObject
     {
         return incomingDamage; // Mặc định không đổi dmg
     }
+
+    // Dùng cho Slime: Can thiệp vào sát thương quái nhận vào
+    public virtual int OnModifyIncomingDamage(int rawDamage, GameManager gm)
+    {
+        return rawDamage;
+    }
+
+    // Dùng cho Slime: Xử lý khi máu về 0 (Trả về true nếu quái tự hồi sinh)
+    public virtual bool OnTryRevive(GameManager gm)
+    {
+        return false;
+    }
+
+    // Dùng cho Nhện: Gọi khi quái đánh trúng người chơi
+    public virtual void OnEnemyDealsDamage(GameManager gm)
+    {
+    }
+
+    // Dùng cho Nhện: Gọi mỗi khi kết thúc lượt (để trừ máu độc)
+    public virtual void OnTurnEnd(GameManager gm)
+    {
+    }
+
+    // Dùng cho Skeleton: Cộng điểm ảo vào bài của quái
+    public virtual int OnCalculateScoreBonus(int currentScore)
+    {
+        return 0;
+    }
+
+    // Dùng cho Vampire & Skeleton: Can thiệp sát thương quái GÂY RA
+    public virtual int OnModifyOutgoingDamage(int finalDamage, GameManager gm)
+    {
+        return finalDamage;
+    }
 }

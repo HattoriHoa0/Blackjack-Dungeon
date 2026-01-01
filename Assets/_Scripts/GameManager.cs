@@ -13,6 +13,10 @@ public class GameManager : MonoBehaviour
     public CharacterBase player;
     public CharacterBase enemy;
 
+    [Header("Elite States")]
+    public bool hasSlimeRevived = false;
+    public int poisonStacks = 0;
+
     [Header("Hero System")]
     private HeroData currentHero; // Biến private để lưu hero hiện tại
 
@@ -40,6 +44,10 @@ public class GameManager : MonoBehaviour
     public GameObject buffSelectionPanel;
     public Transform buffContainer;
     public int levelsPerBuff = 2;
+    [Header("Sudden Death Config")]
+    public int currentBattleTurn = 0; // Đếm số lượt trong trận hiện tại
+    public int turnLimitBeforeBurn = 5; // Giới hạn 5 lượt
+    public int burnDamageAmount = 50; // Sát thương thiêu đốt
     //REROLL CONFIG ---
     [Space(10)]
     public Button buffRerollButton; // Kéo nút Reroll vào đây
@@ -85,10 +93,10 @@ public class GameManager : MonoBehaviour
 
     // Các biến cục bộ
     public List<CardData> playerHand = new List<CardData>();
-    private List<CardData> dealerHand = new List<CardData>();
+    public List<CardData> dealerHand = new List<CardData>();
     private GameObject hiddenCardObject;
 
-    private int currentBet = 0;
+    public int currentBet = 0;
     public int currentLevel = 1;
     private bool isDoubleActive = false;
 
@@ -109,40 +117,45 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // Biến lưu máu khởi đầu (mặc định là -1 để CharacterBase tự hiểu là lấy gốc)
+        int startingHP = -1;
+
         // 1. LẤY HERO TỪ DATA HOLDER
         if (GameDataHolder.Instance != null && GameDataHolder.Instance.selectedHero != null)
         {
             currentHero = GameDataHolder.Instance.selectedHero;
             Debug.Log($"Đang chơi Hero: {currentHero.heroName}");
+
+            // Lưu lại máu của Hero để dùng cho hàm Initialize bên dưới
+            startingHP = currentHero.baseHP;
+
+            // Update UI Portrait
+            if (heroPortraitUI != null)
+            {
+                heroPortraitUI.sprite = currentHero.portrait;
+                heroPortraitUI.preserveAspect = true;
+            }
         }
         else
         {
             Debug.LogWarning("Chưa chọn Hero! Load Hero mặc định để test.");
-            // Bạn có thể gán tạm một HeroData mặc định ở đây nếu test thẳng trong Scene Game
         }
 
-        // 2. SETUP PLAYER DỰA TRÊN HERO
-        if (currentHero != null)
+        // 2. KHỞI TẠO PLAYER (SỬA ĐOẠN NÀY)
+        if (player)
         {
-            // Set Máu
-            player.maxHP = currentHero.baseHP;
-            player.currentHP = currentHero.baseHP; // Reset máu về đầy
-
-            // Set Buff Khởi đầu
-            if (currentHero.startingBuff != null)
-            {
-                // Giả sử bạn đã có hàm AddBuff trong Player hoặc CharacterBase
-                // Nếu chưa, hãy dùng: player.AddBuff(currentHero.startingBuff);
-                player.AddOrUpgradeBuff(currentHero.startingBuff);
-            }
-            if (heroPortraitUI != null)
-            {
-                heroPortraitUI.sprite = currentHero.portrait;
-                heroPortraitUI.preserveAspect = true; // Giữ tỷ lệ ảnh cho đẹp
-            }
+            // Truyền thẳng máu vào hàm Initialize
+            // Nếu startingHP là 900 -> Set máu 900
+            // Nếu startingHP là -1 (chưa chọn hero) -> Set máu mặc định (1000)
+            player.Initialize(startingHP);
         }
 
-        if (player) player.Initialize();
+        // 3. SAU KHI INIT XONG MỚI ADD BUFF (Để đảm bảo chỉ số đúng rồi mới cộng buff)
+        if (currentHero != null && currentHero.startingBuff != null)
+        {
+            player.AddOrUpgradeBuff(currentHero.startingBuff);
+        }
+
         SetupEnemyForLevel();
         if (buffSelectionPanel) buffSelectionPanel.SetActive(false);
         ShowBettingPhase();
@@ -151,6 +164,10 @@ public class GameManager : MonoBehaviour
 
     void SetupEnemyForLevel()
     {
+        currentBattleTurn = 0; //Reset bộ đếm lượt
+        hasSlimeRevived = false;
+        poisonStacks = 0;
+
         if (playerDeck) playerDeck.InitializeDeck();
         if (enemyDeck) enemyDeck.InitializeDeck();
 
@@ -210,6 +227,13 @@ public class GameManager : MonoBehaviour
         dealButton.interactable = false;
         clearButton.interactable = true;
         CheckChipButtons();
+
+        // Cập nhật text Level kèm theo số lượt
+        if (levelText)
+        {
+            string color = (currentBattleTurn >= turnLimitBeforeBurn - 1) ? "red" : "white";
+            levelText.text = $"LEVEL {currentLevel} <size=60%><color={color}>(Turn {currentBattleTurn + 1}/{turnLimitBeforeBurn})</color></size>";
+        }
     }
 
     void CheckChipButtons()
@@ -381,51 +405,35 @@ public class GameManager : MonoBehaviour
 
         if (playerBlackjack && playerWin) baseDamage = Mathf.RoundToInt(baseDamage * 1.5f);
 
+        // --- XỬ LÝ THẮNG THUA & TRỪ MÁU BÀI (Giai đoạn 1) ---
         if (playerWin)
         {
             finalDamage = player.CalculateFinalOutgoingDamage(baseDamage, pScore, isDoubleActive);
-
-            if (tempDamageMultiplier > 1f)
-            {
-                finalDamage = Mathf.RoundToInt(finalDamage * tempDamageMultiplier);
-            }
+            if (tempDamageMultiplier > 1f) finalDamage = Mathf.RoundToInt(finalDamage * tempDamageMultiplier);
 
             if (player.activeBuffs != null)
-            {
-                foreach (var runtimeBuff in player.activeBuffs)
-                {
-                    finalDamage = runtimeBuff.data.ModifyPlayerDamage(finalDamage, this, runtimeBuff.level);
-                }
-            }
+                foreach (var b in player.activeBuffs) finalDamage = b.data.ModifyPlayerDamage(finalDamage, this, b.level);
 
+            // Logic tính dmg cũ của ability (giữ lại để tương thích)
+            if (currentEnemyData.abilityLogic != null)
+                finalDamage = currentEnemyData.abilityLogic.OnCalculateDamage(finalDamage, pScore);
+
+            // [MỚI] SLIME: Hook giảm sát thương nhận vào
             if (currentEnemyData.abilityLogic != null)
             {
-                finalDamage = currentEnemyData.abilityLogic.OnCalculateDamage(finalDamage, pScore);
+                finalDamage = currentEnemyData.abilityLogic.OnModifyIncomingDamage(finalDamage, this);
             }
 
-            if (enemyScoreText && currentEnemyData.abilityLogic != null && pScore <= 16 && currentEnemyData.abilityLogic.name.Contains("Iron"))
-            {
-                ShowNotification($"QUÁI ĐỠ ĐÒN! CHỈ GÂY {finalDamage} ST");
-            }
-            else
-            {
-                string winMsg = playerBlackjack ? "<color=yellow>BLACKJACK!</color> " : "THẮNG! ";
-                string rageMsg = (tempDamageMultiplier > 1f) ? $" (x{tempDamageMultiplier}) " : "";
-                ShowNotification($"{winMsg}GÂY {finalDamage}{rageMsg} ST");
-            }
+            string noti = "THẮNG! GÂY " + finalDamage + " ST";
+            if (playerBlackjack) noti = "<color=yellow>BLACKJACK!</color> " + noti;
+            ShowNotification(noti);
 
             enemy.TakeDamage(finalDamage);
-
         }
         else if (enemyWin)
         {
             finalDamage = player.CalculateFinalIncomingDamage(currentBet, dScore);
-
-            if (tempDamageMultiplier > 1f)
-            {
-                finalDamage = Mathf.RoundToInt(finalDamage * tempDamageMultiplier);
-                UpdateResultText($"PHẢN TÁC DỤNG! (NHẬN x{tempDamageMultiplier} ST)");
-            }
+            if (tempDamageMultiplier > 1f) finalDamage = Mathf.RoundToInt(finalDamage * tempDamageMultiplier);
 
             if (tempBlock > 0)
             {
@@ -439,7 +447,21 @@ public class GameManager : MonoBehaviour
                 ShowNotification($"THUA! NHẬN {finalDamage} SÁT THƯƠNG");
             }
 
+            player.TakeDamage(finalDamage); // Nhận dmg đợt 1 ngay tại đây
+
+            // --- [MỚI] VAMPIRE & SKELETON: Can thiệp damage đầu ra của quái ---
+            if (currentEnemyData.abilityLogic != null)
+            {
+                finalDamage = currentEnemyData.abilityLogic.OnModifyOutgoingDamage(finalDamage, this);
+            }
+
+            ShowNotification($"THUA! NHẬN {finalDamage} SÁT THƯƠNG");
             player.TakeDamage(finalDamage);
+            // [MỚI] NHỆN ĐỘC: Hook tích độc khi quái đánh trúng
+            if (currentEnemyData.abilityLogic != null)
+            {
+                currentEnemyData.abilityLogic.OnEnemyDealsDamage(this);
+            }
         }
         else
         {
@@ -449,7 +471,9 @@ public class GameManager : MonoBehaviour
         if (playerDeck) playerDeck.AddToDiscardPile(playerHand);
         if (enemyDeck) enemyDeck.AddToDiscardPile(dealerHand);
 
-        CheckWinCondition();
+        // --- THAY ĐỔI Ở ĐÂY: Gọi quy trình kết thúc lượt (Có độ trễ) ---
+        // Coroutine này sẽ xử lý tiếp: Trừ độc -> Thiêu đốt -> Hồi sinh Slime -> Check Win/Loss
+        StartCoroutine(EndTurnSequence());
     }
 
     void CheckWinCondition()
@@ -460,8 +484,18 @@ public class GameManager : MonoBehaviour
         }
         else if (enemy.CurrentHP <= 0)
         {
+            // SLIME: Check hồi sinh trước khi cho chết ---
+            if (currentEnemyData.abilityLogic != null)
+            {
+                // Nếu hàm OnTryRevive trả về true -> Nghĩa là nó sống lại -> Return luôn, ko thắng nữa
+                if (currentEnemyData.abilityLogic.OnTryRevive(this))
+                {
+                    Invoke("ShowBettingPhase", 2f); // Vào lại vòng cược tiếp theo
+                    return;
+                }
+            }
             // 1. Logic thưởng tiền cơ bản (Code cũ giữ nguyên)
-            int goldReward = (currentLevel % 3 == 0) ? 75 : 35; // Ví dụ
+            int goldReward = (currentLevel % 3 == 0) ? 70 : 30; // Ví dụ
             player.AddGold(goldReward);
 
             // 2. --- [MỚI] GỌI BUFF ON ENEMY KILLED ---
@@ -664,21 +698,44 @@ public class GameManager : MonoBehaviour
 
     public int CalculateScore(List<CardData> hand)
     {
-        int score = 0; int aceCount = 0;
+        int score = 0;
+        int aceCount = 0;
+
         foreach (var card in hand)
         {
             score += card.value;
+            // Kiểm tra Ace để tính 11 điểm
             if (card.cardName.Contains("Ace") || card.value == 11) aceCount++;
         }
 
-        if (hand == playerHand) { score += tempScoreBonus; }
-
-        if (hand == playerHand && currentHero != null && currentHero.passiveType == HeroPassiveType.ScorePlusOne)
+        // --- LOGIC CHO PLAYER ---
+        if (hand == playerHand)
         {
-            score += 1;
+            score += tempScoreBonus; // Cộng điểm từ Item
+
+            // Nội tại Hero (Kbruh)
+            if (currentHero != null && currentHero.passiveType == HeroPassiveType.ScorePlusOne)
+            {
+                score += 1;
+            }
         }
 
-        while (score > 21 && aceCount > 0) { score -= 10; aceCount--; }
+        // --- [MỚI] LOGIC CHO DEALER / ELITE ---
+        // Nếu đây là bài của Dealer (Quái) và có Ability đặc biệt (VD: Hiệp sĩ Xương)
+        if (hand == dealerHand && currentEnemyData != null && currentEnemyData.abilityLogic != null)
+        {
+            // Gọi hàm cộng điểm từ Ability (Skeleton trả về 1)
+            score += currentEnemyData.abilityLogic.OnCalculateScoreBonus(score);
+        }
+        // --------------------------------------
+
+        // Xử lý Ace: Nếu điểm > 21 thì coi Ace là 1 (trừ đi 10)
+        while (score > 21 && aceCount > 0)
+        {
+            score -= 10;
+            aceCount--;
+        }
+
         return score;
     }
 
@@ -833,5 +890,76 @@ public class GameManager : MonoBehaviour
     public HeroData GetCurrentHero()
     {
         return currentHero;
+    }
+
+    // Hàm xử lý riêng cho cơ chế Thiêu Đốt (Sudden Death)
+    void ApplySuddenDeath()
+    {
+        // Chỉ tính nếu quái VẪN CÒN SỐNG sau khi đánh xong (nghĩa là trận đấu chưa kết thúc)
+        // Lưu ý: Nếu quái chết bởi đòn đánh trên thì currentHP <= 0, ta không cần thiêu đốt nữa
+        if (enemy.CurrentHP > 0)
+        {
+            currentBattleTurn++; // Tăng lượt
+
+            // Nếu vượt quá giới hạn lượt (VD: 5)
+            if (currentBattleTurn >= turnLimitBeforeBurn)
+            {
+                // 1. Trừ máu ngay lập tức
+                player.TakeDamage(burnDamageAmount);
+
+                // 2. Hiển thị thông báo cảnh báo (chạy sau thông báo thắng thua 1 chút)
+                string warningMsg = $"<color=red>QUÁ GIỜ! THIÊU ĐỐT -{burnDamageAmount} HP ({currentBattleTurn}/{turnLimitBeforeBurn})</color>";
+                StartCoroutine(ShowBurnWarning(warningMsg));
+            }
+        }
+    }
+
+    System.Collections.IEnumerator ShowBurnWarning(string msg)
+    {
+        yield return new WaitForSeconds(1.5f); // Chờ thông báo thắng/thua cũ hiện xong
+        ShowNotification(msg);
+
+        // Rung màn hình hoặc hiệu ứng âm thanh ở đây nếu muốn
+        if (notificationText) notificationText.transform.DOShakePosition(0.5f, 10f);
+    }
+
+    System.Collections.IEnumerator EndTurnSequence()
+    {
+        // 1. Nếu một trong hai bên đã chết sau đòn đánh bài, bỏ qua thiêu đốt để Game Over luôn cho nhanh
+        if (enemy.CurrentHP > 0 && player.CurrentHP > 0)
+        {
+            currentBattleTurn++; // Tăng lượt
+
+            // Nếu đến giờ thiêu đốt
+            if (currentBattleTurn >= turnLimitBeforeBurn)
+            {
+                // --- CHỜ 1.5 GIÂY (Để người chơi nhìn thấy dmg của ván bài trước) ---
+                yield return new WaitForSeconds(1.5f);
+
+                // --- [MỚI] NHỆN: Trừ máu độc ---
+                if (currentEnemyData.abilityLogic != null && poisonStacks > 0)
+                {
+                    currentEnemyData.abilityLogic.OnTurnEnd(this);
+                    yield return new WaitForSeconds(1.0f); // Chờ cho người chơi nhìn thấy dmg độc
+                }
+
+                // --- HIỂN THỊ THÔNG BÁO THIÊU ĐỐT ---
+                string warningMsg = $"<color=red>THIÊU ĐỐT! (-{burnDamageAmount} HP)</color>";
+                ShowNotification(warningMsg);
+
+                // Rung chữ cảnh báo
+                if (notificationText) notificationText.transform.DOShakePosition(0.5f, 10f);
+
+                // --- CHỜ 0.5 GIÂY (Cho người chơi đọc chữ "Thiêu đốt") ---
+                yield return new WaitForSeconds(0.5f);
+
+                // --- NHẬN DMG THIÊU ĐỐT (Giai đoạn 2) ---
+                player.TakeDamage(burnDamageAmount);
+            }
+        }
+
+        // 2. Kiểm tra thắng thua cuối cùng
+        // (Nếu player chết bởi thiêu đốt, hàm này sẽ xử lý Game Over)
+        CheckWinCondition();
     }
 }

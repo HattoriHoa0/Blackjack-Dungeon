@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c4ab1fbc16d288942843c3c9a2daba2f, type: 3}
-  m_Name: "Ph\xE1p s\u01B0 t\u0129nh l\u1EB7ng"
+  m_Name: "Nh\u1EC7n \u0110\u1ED9c"
   m_EditorClassIdentifier: 
-  enemyName: "Ph\xE1p s\u01B0 t\u0129nh l\u1EB7ng"
-  portrait: {fileID: -6866426400061525702, guid: a8260ab1d536530439d11bb93970a8e4, type: 3}
-  baseHP: 100
-  abilityLogic: {fileID: 11400000, guid: 893d33180e262b248913c542a4ecdeb6, type: 2}
+  enemyName: "Nh\u1EC7n \u0110\u1ED9c"
+  portrait: {fileID: 3873087697204469031, guid: a57a6e8d59d886d429c66e6060f4a86c, type: 3}
+  baseHP: 120
+  abilityLogic: {fileID: 11400000, guid: 533cfcd0e1733ef4585cd917e569efa4, type: 2}

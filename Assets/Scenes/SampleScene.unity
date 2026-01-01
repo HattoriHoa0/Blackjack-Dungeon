@@ -6719,6 +6719,8 @@ MonoBehaviour:
   enemyDeck: {fileID: 1805961622}
   player: {fileID: 2064919275}
   enemy: {fileID: 1234395054}
+  hasSlimeRevived: 0
+  poisonStacks: 0
   shopManager: {fileID: 593869156}
   inventoryUI: {fileID: 917433616}
   gameOverPanel: {fileID: 1400607389}
@@ -6730,6 +6732,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f38dc8c5aedb4a946a928d7f687dc0f8, type: 2}
   - {fileID: 11400000, guid: 460f9d3c93010e041adb5de15c09082e, type: 2}
   - {fileID: 11400000, guid: 32b8b50669eeadc4993958cd841489bc, type: 2}
+  - {fileID: 11400000, guid: defea1d8ca1aa2d4ebcb60c70d987209, type: 2}
+  - {fileID: 11400000, guid: ca9ae1e8e30c6564493be43d77384ade, type: 2}
+  - {fileID: 11400000, guid: 4cf6d4423987b624fad3a5604e0e0982, type: 2}
+  - {fileID: 11400000, guid: 17a7204d94493504ab47d595caec00ce, type: 2}
   enemyAbilityText: {fileID: 0}
   allBuffsLibrary:
   - {fileID: 11400000, guid: f5f7a924ab04e2848b0258c7716dd2f4, type: 2}
@@ -6747,7 +6753,10 @@ MonoBehaviour:
   buffCardPrefab: {fileID: 258607003408299970, guid: c13435f660680f94786c6e94b87daa4f, type: 3}
   buffSelectionPanel: {fileID: 1863149536}
   buffContainer: {fileID: 1961669347}
-  levelsPerBuff: 1
+  levelsPerBuff: 2
+  currentBattleTurn: 0
+  turnLimitBeforeBurn: 5
+  burnDamageAmount: 50
   buffRerollButton: {fileID: 1331183033}
   playerHandArea: {fileID: 424795790}
   dealerHandArea: {fileID: 1530791057}
@@ -6773,6 +6782,8 @@ MonoBehaviour:
   tempBlock: 0
   hasPlayerHit: 0
   playerHand: []
+  dealerHand: []
+  currentBet: 0
   currentLevel: 1
 --- !u!4 &1805961621
 Transform:
@@ -6864,7 +6875,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0.135}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 3.5931396, y: 1.508606}
+  m_AnchoredPosition: {x: 3.5930176, y: 1.5085449}
   m_SizeDelta: {x: 488.8901, y: 283.24}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1863149538
