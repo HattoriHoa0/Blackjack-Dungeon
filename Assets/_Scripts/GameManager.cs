@@ -38,6 +38,9 @@ public class GameManager : MonoBehaviour
     public List<EnemyData> eliteEnemiesList;
     public TextMeshProUGUI enemyAbilityText;
 
+    [Header("UI Intro")]
+    public BattleIntroUI battleIntroUI;
+
     [Header("Cấu hình Buff & Level")]
     public List<BuffData> allBuffsLibrary;
     public GameObject buffCardPrefab;
@@ -202,6 +205,36 @@ public class GameManager : MonoBehaviour
         if (enemyAbilityText)
             enemyAbilityText.text = (currentEnemyData.abilityLogic != null) ?
                 $"<color=red>⚠️ {abilityDesc}</color>" : "";
+
+        // SAU KHI ĐÃ CHỌN ĐƯỢC QUÁI (currentEnemyData)
+        // Kiểm tra xem đây có phải Elite hay Boss không?
+        // (Bạn có thể thêm biến bool isElite trong EnemyData để check cho chuẩn)
+        bool isEliteOrBoss = eliteEnemiesList.Contains(currentEnemyData);
+
+        if (isEliteOrBoss && battleIntroUI != null)
+        {
+            // Ẩn UI game tạm thời để chiếu Intro
+            if (gameplayPanel) gameplayPanel.SetActive(false);
+            if (bettingPanel) bettingPanel.SetActive(false);
+
+            // CHẠY INTRO
+            battleIntroUI.PlayIntroSequence(currentHero, currentEnemyData, OnIntroFinished);
+        }
+        else
+        {
+            // Nếu là quái thường thì vào thẳng game như cũ
+            OnIntroFinished();
+        }
+    }
+
+    // Hàm callback được gọi sau khi Intro chạy xong
+    void OnIntroFinished()
+    {
+        // Hiện bảng cược để bắt đầu chơi
+        ShowBettingPhase();
+
+        // Hiện lại các UI cần thiết
+        if (notificationText) notificationText.alpha = 0f;
     }
 
     // --- PHA 1: ĐẶT CƯỢC ---
@@ -440,14 +473,7 @@ public class GameManager : MonoBehaviour
                 int blocked = Mathf.Min(finalDamage, tempBlock);
                 finalDamage -= blocked;
                 if (finalDamage < 0) finalDamage = 0;
-                ShowNotification($"THUA! KHIÊN ĐỠ {blocked}, NHẬN {finalDamage} ST");
             }
-            else
-            {
-                ShowNotification($"THUA! NHẬN {finalDamage} SÁT THƯƠNG");
-            }
-
-            player.TakeDamage(finalDamage); // Nhận dmg đợt 1 ngay tại đây
 
             // --- [MỚI] VAMPIRE & SKELETON: Can thiệp damage đầu ra của quái ---
             if (currentEnemyData.abilityLogic != null)
@@ -455,7 +481,10 @@ public class GameManager : MonoBehaviour
                 finalDamage = currentEnemyData.abilityLogic.OnModifyOutgoingDamage(finalDamage, this);
             }
 
-            ShowNotification($"THUA! NHẬN {finalDamage} SÁT THƯƠNG");
+            if (tempBlock > 0)
+                ShowNotification($"THUA! (ĐỠ {tempBlock}) NHẬN {finalDamage} ST");
+            else
+                ShowNotification($"THUA! NHẬN {finalDamage} SÁT THƯƠNG");
             player.TakeDamage(finalDamage);
             // [MỚI] NHỆN ĐỘC: Hook tích độc khi quái đánh trúng
             if (currentEnemyData.abilityLogic != null)
