@@ -15,9 +15,9 @@ MonoBehaviour:
   heroID: pain
   heroName: Pain
   description: "Tr\xF9m Soi L\xE9n: Gi\xE1 c\u1EE7a item Glass gi\u1EA3m \u0111i
-    10 gold. Nh\u1EADn Buff kh\u1EDDi \u0111\u1EA7u Li\u1EC1u \u0102n Nhi\u1EC1u
+    10 gold. Nh\u1EADn Buff kh\u1EDFi \u0111\u1EA7u Li\u1EC1u \u0102n Nhi\u1EC1u
     H\u01A1n"
   portrait: {fileID: -7663176772277722578, guid: d780fa55a18e5714b8c0657d0a2bf2d1, type: 3}
-  baseHP: 950
+  baseHP: 1100
   passiveType: 3
   startingBuff: {fileID: 11400000, guid: d2e069ba3a9777c48ba97c32a5a8b7ee, type: 2}

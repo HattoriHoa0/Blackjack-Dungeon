@@ -60,8 +60,20 @@ public class SettingsManager : MonoBehaviour
     // Hàm về Menu chính (Gán vào Nút)
     public void ReturnToMainMenu()
     {
-        // Nhớ trả lại thời gian chạy bình thường trước khi chuyển cảnh
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(mainMenuSceneName);
+        Time.timeScale = 1f; // Đảm bảo trả lại thời gian
+
+        // Lấy tên scene hiện tại
+        string currentScene = SceneManager.GetActiveScene().name;
+
+        // Nếu đang chơi game (khác scene MainMenu) -> Load về Menu
+        if (currentScene != mainMenuSceneName)
+        {
+            SceneManager.LoadScene(mainMenuSceneName);
+        }
+        // Nếu đang ở MainMenu rồi -> Chỉ cần tắt bảng Setting đi
+        else
+        {
+            TogglePauseMenu();
+        }
     }
 }

@@ -15,8 +15,8 @@ MonoBehaviour:
   heroID: gernas
   heroName: Gernas
   description: "Bi\u1EC7n Ph\xE1p An To\xE0n: H\u1ED3i 50HP sau m\u1ED7i level. Nh\u1EADn
-    Buff kh\u1EDDi \u0111\u1EA7u Gh\xEA V\u1EADy Sao"
+    Buff kh\u1EDFi \u0111\u1EA7u Gh\xEA V\u1EADy Sao"
   portrait: {fileID: 5137916104171707190, guid: 9423ade7f22cfd440b47d160a00994c9, type: 3}
-  baseHP: 1000
+  baseHP: 1200
   passiveType: 1
   startingBuff: {fileID: 11400000, guid: a19c6e5c0186e5d49af7e2dbbceb7ac9, type: 2}

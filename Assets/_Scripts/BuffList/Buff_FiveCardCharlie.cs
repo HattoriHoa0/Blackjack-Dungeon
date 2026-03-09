@@ -29,7 +29,9 @@ public class Buff_FiveCardCharlie : BuffData
             // 4. Gọi GameManager xử lý thắng
             // Cần thêm hàm MultiplyTempDamage trong GameManager như bạn đã làm ở các bước trước
             gm.MultiplyTempDamage(1 + bonus);
-            gm.ShowNotification($"NGŨ LINH! THẮNG NGAY (x{1 + bonus} DMG)");
+            gm.ShowNotification($"NGŨ LINH! (x{1 + bonus} DMG)");
+
+            gm.isInstantWin = true; // Đánh dấu thắng ngay
 
             // Ép thắng (truyền false để báo không bị bust)
             gm.ResolveCombat(false);

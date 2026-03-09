@@ -94,6 +94,9 @@ public class GameManager : MonoBehaviour
     public int tempBlock = 0;
     public bool hasPlayerHit = false;
 
+    [Header("Game State")]
+    public bool isInstantWin = false; // Cờ đánh dấu thắng ngay lập tức
+
     // Các biến cục bộ
     public List<CardData> playerHand = new List<CardData>();
     public List<CardData> dealerHand = new List<CardData>();
@@ -240,6 +243,8 @@ public class GameManager : MonoBehaviour
     // --- PHA 1: ĐẶT CƯỢC ---
     void ShowBettingPhase()
     {
+        isInstantWin = false; // Reset cờ thắng ngay mỗi vòng cược mới
+
         foreach (Transform child in playerHandArea) Destroy(child.gameObject);
         foreach (Transform child in dealerHandArea) Destroy(child.gameObject);
         playerHand.Clear();
@@ -432,6 +437,7 @@ public class GameManager : MonoBehaviour
         bool playerBlackjack = (pScore == 21 && playerHand.Count == 2);
 
         if (playerBusted) enemyWin = true;
+        else if (isInstantWin) playerWin = true; // Kiểm tra cờ thắng ngay
         else if (dScore > 21) playerWin = true;
         else if (pScore > dScore) playerWin = true;
         else if (dScore > pScore) enemyWin = true;

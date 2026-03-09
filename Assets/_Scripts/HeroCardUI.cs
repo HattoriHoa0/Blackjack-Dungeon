@@ -23,16 +23,13 @@ public class HeroCardUI : MonoBehaviour
             return;
         }
 
-        // Kiểm tra các biến UI (Nguyên nhân 1)
-        if (heroPortrait == null) Debug.LogError("LỖI: Chưa kéo 'Hero Portrait' vào script HeroCardUI trong Prefab!");
-        if (heroNameText == null) Debug.LogError("LỖI: Chưa kéo 'Hero Name Text' vào script HeroCardUI trong Prefab!");
         myData = data;
         manager = mng;
 
         // Điền thông tin
         heroPortrait.sprite = data.portrait;
         heroNameText.text = data.heroName;
-        descriptionText.text = $"{data.description}\n<color=yellow>HP: {data.baseHP}</color>";
+        descriptionText.text = $"{data.description}\n<color=red>HP: {data.baseHP}</color>";
 
         // Mặc định tắt viền chọn
         if (borderImage) borderImage.enabled = false;

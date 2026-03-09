@@ -4,7 +4,7 @@ using UnityEngine;
 public class Buff_EliteHunter : BuffData
 {
     [Header("Vàng nhận thêm (Level 1, 2, 3)")]
-    public int[] bonusGold = { 10, 15, 25 };
+    public int[] bonusGold = { 15, 25, 40 };
 
     public override string GetDescription(int level)
     {

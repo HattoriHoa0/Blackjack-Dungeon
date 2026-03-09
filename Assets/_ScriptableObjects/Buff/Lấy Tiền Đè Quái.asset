@@ -16,6 +16,7 @@ MonoBehaviour:
   buffName: "L\u1EA5y Ti\u1EC1n \u0110\xE8 Qu\xE1i"
   icon: {fileID: -241934003333704416, guid: edd609f988cbb894fa1bca9f0538a8d5, type: 3}
   percentPerStack:
-  - 0.2
+  - 0.25
   - 0.3
   - 0.45
+  maxGoldCap: 300
