@@ -69,6 +69,7 @@ public class CharacterBase : MonoBehaviour
     {
         currentGold += amount;
         UpdateGoldUI();
+        Debug.Log($"Gold updated: {currentGold} (changed by {amount})");
         if (goldText) goldText.transform.DOPunchScale(Vector3.one * 0.2f, 0.2f);
     }
 
